@@ -1,0 +1,12 @@
+[package]
+name = "krpsim"
+version = "0.1.0"
+authors = ["Hugo Sabourin <hsabouri@student.42.fr>"]
+edition = "2018"
+
+[build-dependencies] # <-- We added this and everything after!
+lalrpop = "0.17.2"
+
+[dependencies]
+lalrpop-util = "0.17.2"
+regex = "0.2.1"

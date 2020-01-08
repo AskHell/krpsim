@@ -1,0 +1,111 @@
+iron:30
+copper:15
+gear:0
+assembly_machine:2
+
+assemble_gear:
+    (
+        iron:2;
+        assembly_machine:1
+    ):(
+        gear:1;
+        assembly_machine:1
+    ):5
+
+assemble_red_science:
+    (
+        gear:1;
+        copper:1;
+        assembly_machine:1
+    ):(
+        red_science:1;
+        assembly_machine:1
+    ):50
+
+assemble_red_science:
+    (
+        gear:1;
+        copper:1;
+        assembly_machine:1
+    ):(
+        red_science:4;
+    ):50
+
+optimize:(time;red_science)
+
+################################
+#### krpsim factorio.sim infinit
+
+0:assemble_gear
+0:assemble_gear
+
+5:assemble_gear
+5:assemble_red_science
+
+10:assemble_gear
+
+15:assemble_gear
+
+20:assemble_gear
+
+25:assemble_gear
+
+30:assemble_gear
+
+35:assemble_gear
+
+40:assemble_gear
+
+45:assemble_gear
+
+50:assemble_gear
+
+55:assemble_gear
+55:assemble_red_science
+
+60:assemble_gear
+
+65:assemble_gear
+
+70: assemble_red_science
+105:assemble_red_science
+120:assemble_red_science
+155:assemble_red_science
+170:assemble_red_science
+205:assemble_red_science
+220:assemble_red_science
+255:assemble_red_science
+270:assemble_red_science
+305:assemble_red_science
+320:assemble_red_science
+355:assemble_red_science
+370:assemble_red_science
+
+no more process doable at time 420
+Stock:
+    copper => 0
+    iron => 0
+    gear => 0
+    assembly_machine => 2
+    red_science => 15
+
+15 red_science in 420 time units
+
+Logiquement on doit pouvoir faire mieux que ca parce-qu'il y'a un decalage entre les deux machines d'assemblage
+
+############################
+#### krpsim factorio.sim 100
+0:assemble_gear
+0:assemble_gear
+5:assemble_red_science
+5:assemble_red_science
+
+no more usefull process doable at time 55
+Stock:
+    copper => 13
+    iron => 36
+    gear => 0
+    assembly_machine => 2
+    red_science => 2
+
+2 red_science in 55 time units
