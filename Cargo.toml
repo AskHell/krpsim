@@ -3,6 +3,7 @@ name = "krpsim"
 version = "0.1.0"
 authors = ["Hugo Sabourin <hsabouri@student.42.fr>"]
 edition = "2018"
+build = "build.rs"
 
 [build-dependencies] # <-- We added this and everything after!
 lalrpop = "0.17.2"

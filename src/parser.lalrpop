@@ -1,32 +1,69 @@
 use std::str::FromStr;
 use std::collections::HashMap;
 
+use crate::ast::{
+    Inventory,
+    Process,
+    Simulation,
+    convert
+};
+
 grammar;
 
-Process:
-
-AssociativeList: HashMap<Name, Num> = {
-    "(" <l:(<Associative> ";")*> <e:Associative> ")" => {
-        // from Vec<Associative> to HashMap<Name, Num>
+pub Simulation: Simulation = {
+    <i:Inventory> "##\n" <p:Process+> <o:Optimize> => {
+        Simulation::new(i, p, o)
     }
 }
 
-NameList: Vec<Name> = {
-    "(" <l:(<Name> ";")*> <e:Name> ")" => {
-        let mut vecNameList = l;
+Optimize: (Vec<String>, bool) = {
+    "optimize:" <l: NameList> => {
+        let mut vec: Vec<String> = vec![];
+        let mut time = false;
 
-        vecNameList.push(e);
-        vecNameList
+        for e in l.into_iter() {
+            if e == "time" { time = true; }
+            else { vec.push(e) }
+        }
+        (vec, time)
     }
 }
 
-Associative: (Name, Num) = {
+Process: Process = {
+    <n: Name> ":" <i: AssociativeList> ":" <o: AssociativeList> ":" <d: Num> => {
+        Process::new(n, i, o, d)
+    }
+};
+
+Inventory: Inventory = {
+    <l:Associative*> => {
+        convert(l)
+    }
+};
+
+AssociativeList: Inventory = {
+    "(" <l:(<Associative> ";")*> <e:Associative?> ")" => {
+        let mut vec = l;
+
+        if let Some(e) = e { vec.push(e); }
+        convert(vec)
+    }
+};
+
+NameList: Vec<String> = {
+    "(" <l:(<Name> ";")*> <e:Name?> ")" => {
+        let mut vec = l;
+
+        if let Some(e) = e { vec.push(e); }
+        vec
+    }
+};
+
+Associative: (String, u32) = {
     <a:Name> ":" <b:Num> => {
         (a, b)
     }
-}
-
-Num: u32 = <s:r"[0-9]+"> => u32::from_str(s).unwrap();
-Name: String = {
-    r"[a-zA-Z_]+" => String::from(<>),
 };
+
+Num: u32 = r"[0-9]+" => u32::from_str(<>).unwrap();
+Name: String = r"[a-zA-Z_]+" => String::from(<>);
