@@ -1,10 +1,20 @@
+# comment
 iron:30
-copper:15
+copper:15 # Comment
 gear:0
+# Comment
+# Comment
 assembly_machine:2
-##
 
-assemble_gear:(iron:2;assembly_machine:1):(gear:1; assembly_machine:1):5
+assemble_gear:( # Comment
+    iron:2; # Comment
+    assembly_machine:1
+):(
+    gear:1;
+    assembly_machine:1
+):5 # Comment
 assemble_red_science:(gear:1;copper:1;assembly_machine:1):(red_science:1;assembly_machine:1):50
 assemble_red_science:(gear:1;copper:1;assembly_machine:1):(red_science:4;):50
-optimize:(red_science)
+
+optimize: # Comment
+    (red_science;time)

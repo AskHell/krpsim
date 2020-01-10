@@ -11,13 +11,23 @@ use crate::ast::{
 grammar;
 
 pub Simulation: Simulation = {
-    <i:Inventory> "##\n" <p:Process+> <o:Optimize> => {
-        Simulation::new(i, p, o)
-    }
-}
+    <i:Associative> <s:Simulation> => {
+        let (name, quantity) = i;
+
+        s.add_inventory(name, quantity)
+    },
+    <p:Process> <s:Simulation> => {
+        s.add_process(p)
+    },
+    <o:Optimize> Comment* => {
+        let s = Simulation::default();
+
+        s.optimize(o)
+    },
+};
 
 Optimize: (Vec<String>, bool) = {
-    "optimize:" <l: NameList> => {
+    "optimize" CompleteBy <l: NameList> => {
         let mut vec: Vec<String> = vec![];
         let mut time = false;
 
@@ -27,22 +37,16 @@ Optimize: (Vec<String>, bool) = {
         }
         (vec, time)
     }
-}
+};
 
 Process: Process = {
-    <n: Name> ":" <i: AssociativeList> ":" <o: AssociativeList> ":" <d: Num> => {
+    <n:Name> CompleteBy <i:AssociativeList> CompleteBy <o:AssociativeList> CompleteBy <d:Num> => {
         Process::new(n, i, o, d)
     }
 };
 
-Inventory: Inventory = {
-    <l:Associative*> => {
-        convert(l)
-    }
-};
-
 AssociativeList: Inventory = {
-    "(" <l:(<Associative> ";")*> <e:Associative?> ")" => {
+    Open <l:(<Associative> Separate)*> <e:Associative?> Close => {
         let mut vec = l;
 
         if let Some(e) = e { vec.push(e); }
@@ -51,7 +55,7 @@ AssociativeList: Inventory = {
 };
 
 NameList: Vec<String> = {
-    "(" <l:(<Name> ";")*> <e:Name?> ")" => {
+    Open <l:(<Name> Separate)*> <e:Name?> Close => {
         let mut vec = l;
 
         if let Some(e) = e { vec.push(e); }
@@ -60,10 +64,17 @@ NameList: Vec<String> = {
 };
 
 Associative: (String, u32) = {
-    <a:Name> ":" <b:Num> => {
+    <a:Name> CompleteBy <b:Num> => {
         (a, b)
     }
 };
 
-Num: u32 = r"[0-9]+" => u32::from_str(<>).unwrap();
-Name: String = r"[a-zA-Z_]+" => String::from(<>);
+CompleteBy = Comment* ":";
+Separate = Comment* ";";
+Open = Comment* "(";
+Close = Comment* ")";
+
+Num: u32 = Comment* <r"[0-9]+"> => u32::from_str(<>).unwrap();
+Name: String = Comment* <r"[a-zA-Z_]+"> => String::from(<>);
+
+Comment = r"#[^\n]*";
