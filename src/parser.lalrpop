@@ -27,7 +27,7 @@ pub Simulation: Simulation = {
 };
 
 Optimize: (Vec<String>, bool) = {
-    "optimize" CompleteBy <l: NameList> => {
+    Comment* "optimize" CompleteBy <l: NameList> => {
         let mut vec: Vec<String> = vec![];
         let mut time = false;
 
@@ -40,7 +40,9 @@ Optimize: (Vec<String>, bool) = {
 };
 
 Process: Process = {
-    <n:Name> CompleteBy <i:AssociativeList> CompleteBy <o:AssociativeList> CompleteBy <d:Num> => {
+    <n:Name> CompleteBy <i:AssociativeList?> CompleteBy <o:AssociativeList?> CompleteBy <d:Num> => {
+        let i = i.unwrap_or(HashMap::new());
+        let o = o.unwrap_or(HashMap::new());
         Process::new(n, i, o, d)
     }
 };
@@ -75,6 +77,6 @@ Open = Comment* "(";
 Close = Comment* ")";
 
 Num: u32 = Comment* <r"[0-9]+"> => u32::from_str(<>).unwrap();
-Name: String = Comment* <r"[a-zA-Z_]+"> => String::from(<>);
+Name: String = Comment* <r"[a-zA-Z_][a-zA-Z_0-9]*"> => String::from(<>);
 
 Comment = r"#[^\n]*";
