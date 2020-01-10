@@ -26,6 +26,7 @@ pub Simulation: Simulation = {
     },
 };
 
+// optimize:(commodity;time;...)
 Optimize: (Vec<String>, bool) = {
     Comment* "optimize" CompleteBy <l: NameList> => {
         let mut vec: Vec<String> = vec![];
@@ -39,6 +40,7 @@ Optimize: (Vec<String>, bool) = {
     }
 };
 
+// name:(input1:0;input2:1;...):(output1:1;output2:4):time
 Process: Process = {
     <n:Name> CompleteBy <i:AssociativeList?> CompleteBy <o:AssociativeList?> CompleteBy <d:Num> => {
         let i = i.unwrap_or(HashMap::new());
@@ -47,6 +49,7 @@ Process: Process = {
     }
 };
 
+// (name:0;name1:1;...)
 AssociativeList: Inventory = {
     Open <l:(<Associative> Separate)*> <e:Associative?> Close => {
         let mut vec = l;
@@ -56,6 +59,7 @@ AssociativeList: Inventory = {
     }
 };
 
+// (name;name1;...)
 NameList: Vec<String> = {
     Open <l:(<Name> Separate)*> <e:Name?> Close => {
         let mut vec = l;
@@ -65,6 +69,7 @@ NameList: Vec<String> = {
     }
 };
 
+// name:0
 Associative: (String, u32) = {
     <a:Name> CompleteBy <b:Num> => {
         (a, b)
@@ -77,6 +82,8 @@ Open = Comment* "(";
 Close = Comment* ")";
 
 Num: u32 = Comment* <r"[0-9]+"> => u32::from_str(<>).unwrap();
+
+// Names must begin by an alpha character or '_' but not by a number
 Name: String = Comment* <r"[a-zA-Z_][a-zA-Z_0-9]*"> => String::from(<>);
 
 Comment = r"#[^\n]*";

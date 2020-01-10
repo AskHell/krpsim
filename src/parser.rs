@@ -1,5 +1,5 @@
 // auto-generated: "lalrpop 0.17.2"
-// sha256: 1fce65eb3231a3d953fc924d885788cc79e654dca98ae457f89dc2f39fb23f
+// sha256: 59546fe56076fe1ff8aa4e842e8d4ce5ed132103b8025727c53ee5b369ca5b
 use std::str::FromStr;
 use std::collections::HashMap;
 use crate::ast::{

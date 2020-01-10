@@ -27,8 +27,14 @@ fn main() {
             .help("Input description file.")
             .required(true)
             .index(1))
+        .arg(Arg::with_name("DELAY")
+            .help("Time of the simulation")
+            .required(false)
+            .index(2))
         .get_matches();
+
     let file = matches.value_of("FILE").unwrap();
+    let delay = matches.value_of("DELAY").unwrap_or("0").parse().unwrap_or(0);
 
     match File::open(file) {
         Ok(mut file) => {
