@@ -1,15 +1,12 @@
-#![feature(process_exitcode_placeholder)]
-
 use std::fs::File;
 use std::io::Read;
 
 use clap::{Arg, App};
 
-mod parser;
-mod ast;
-
-use parser::SimulationParser;
-use ast::Simulation;
+use krpsim::{
+    parser::SimulationParser,
+    ast::Simulation
+};
 
 fn parse(content: String) -> Result<Simulation, String> {
     SimulationParser::new()

@@ -13,12 +13,12 @@ pub fn convert<T: Eq + Hash, U>(input: Vec<(T, U)>) -> HashMap<T, U> {
 
 pub type Inventory = HashMap<String, u32>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Process {
-    name: String,
-    input: Inventory,
-    output: Inventory,
-    duration: u32,
+    pub name: String,
+    pub input: Inventory,
+    pub output: Inventory,
+    pub duration: u32,
 }
 
 impl Process {
