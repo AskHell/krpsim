@@ -13,6 +13,43 @@ pub fn convert<T: Eq + Hash, U>(input: Vec<(T, U)>) -> HashMap<T, U> {
 
 pub type Inventory = HashMap<String, u32>;
 
+pub fn inventory_add(left: &Inventory, right: &Inventory) -> Inventory {
+    let mut res: Inventory = HashMap::new();
+
+    for (key, value) in left.into_iter() {
+        res.insert(key.clone(), match right.get(key) {
+            Some(right_value) => value + right_value,
+            None => value.clone()
+        });
+    }
+    res
+}
+
+pub fn inventory_sub_process(inventory: &Inventory, process: &Process) -> Inventory {
+    let mut res: Inventory = HashMap::new();
+
+    for (key, value) in process.input.iter() {
+        if let Some(has) = inventory.get(key) {
+            if has - value > 0 {
+                res.insert(key.clone(), has - value);
+            }
+        }
+    }
+    res
+}
+
+pub fn inventory_compare(left: &Inventory, right: &Inventory) -> bool {
+    left.iter().fold(true, |acc, (key, value)| {
+        if acc == false {false}
+        else {
+            match right.get(key) {
+                Some(we_got) => we_got >= value,
+                None => false
+            }
+        }
+    })
+}
+
 #[derive(Debug, Clone)]
 pub struct Process {
     pub name: String,
@@ -34,10 +71,10 @@ impl Process {
 
 #[derive(Debug)]
 pub struct Simulation {
-    inventory: Inventory,
-    processes: Vec<Process>,
-    optimize: Vec<String>,
-    optimize_time: bool,
+    pub inventory: Inventory,
+    pub processes: Vec<Process>,
+    pub optimize: Vec<String>,
+    pub optimize_time: bool,
 }
 
 impl Simulation {
