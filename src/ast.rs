@@ -50,7 +50,7 @@ pub fn inventory_compare(left: &Inventory, right: &Inventory) -> bool {
     })
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Process {
     pub name: String,
     pub input: Inventory,
