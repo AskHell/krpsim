@@ -1,3 +1,4 @@
 pub mod parser;
 pub mod ast;
-pub mod solver;
+pub mod node;
+pub mod heuristic;

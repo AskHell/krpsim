@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use krpsim::solver::*;
+use krpsim::node::*;
 use krpsim::ast::*;
 
 #[allow(dead_code)]

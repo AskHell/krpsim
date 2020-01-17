@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use super::ast::{
     Simulation,
     Process,
@@ -8,13 +6,6 @@ use super::ast::{
     inventory_compare,
     inventory_sub_process
 };
-
-fn max_of_iter<T: Ord>(mut i: impl Iterator<Item = T>) -> T {
-    use std::cmp;
-    let start = i.nth(0).unwrap();
-
-    i.fold(start, |acc, item| cmp::max(acc, item))
-}
 
 pub struct Node {
     pub parent: usize,
@@ -26,13 +17,31 @@ pub struct Node {
 }
 
 impl Node {
-    fn separate_processes(processes: Vec<(Process, u32)>, time: u32) -> (Vec<Process>, Vec<Process>) {
-        processes.into_iter()
-            .fold((Vec::<Process>::new(), Vec::<Process>::new()), |(mut finished, mut active), (p, t)| {
-                if t <= time {
-                    finished.push(p)
+    pub fn new(
+        parent: usize,
+        inventory: Inventory,
+        input: Vec<(Process, u32)>,
+        output: Vec<(Process, u32)>,
+        h: u32,
+        time: u32
+    ) -> Self {
+        Node {
+            parent,
+            inventory,
+            input,
+            output,
+            h,
+            time
+        }
+    }
+
+    fn separate_processes(processes: &Vec<(Process, u32)>, time: u32) -> (Vec<(Process, u32)>, Vec<(Process, u32)>) {
+        processes.iter()
+            .fold((Vec::new(), Vec::new()), |(mut finished, mut active), (p, t)| {
+                if *t <= time {
+                    finished.push((p.clone(), *t))
                 } else {
-                    active.push(p)
+                    active.push((p.clone(), *t))
                 }
                 (finished, active)
             })
@@ -111,23 +120,33 @@ impl Node {
         )
     }
 
-    /* // Hidden for commit and tests
-    pub fn get_childs(&self, simulation: &Simulation) -> Vec<Self> {
+    /// Returns a list of all possible child Nodes (aka: every possible path to take) for the A* algorithme.
+    pub fn get_childs(&self, simulation: &Simulation, id: usize) -> Vec<Self> {
         let time = self.output
-            .into_iter()
-            .map(|(p, t)| t)
+            .iter()
+            .map(|(_, t)| t.clone())
             .min()
             .unwrap();
 
-        let (finished, input) = Self::separate_processes(self.output, time);
+        let (finished, input) = Self::separate_processes(&self.output, time);
 
         let new_inventory = finished
             .into_iter()
-            .fold(self.inventory.clone(), |acc, p| {
+            .fold(self.inventory.clone(), |acc, (p, _)| {
                 inventory_add(&acc, &p.output)
             });
 
-        let possible_output = Self::get_possible_outputs(new_inventory, simulation, time);
+        let possible_output = Self::get_possible_outputs(&new_inventory, simulation, time);
+
+        possible_output.into_iter().map(
+            | (output, inv) | Self::new(
+                id,
+                inv,
+                input.clone(),
+                output,
+                0,
+                time
+            )
+        ).collect()
     }
-    */
 }
