@@ -69,7 +69,7 @@ impl Process {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Simulation {
     pub inventory: Inventory,
     pub processes: Vec<Process>,

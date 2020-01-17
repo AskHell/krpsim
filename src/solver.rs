@@ -56,7 +56,7 @@ impl Node {
         .collect()
     }
 
-    fn get_possible_output_closure(
+    fn get_possible_outputs_closure(
         mut acc: Vec<(Vec<(Process, u32)>, Inventory)>,
         mut actual: Vec<(Process, u32)>,
         inventory: Inventory,
@@ -85,7 +85,7 @@ impl Node {
                 };
                 if explore {
                     actual.push((process.clone(), process_end));
-                    acc = Self::get_possible_output_closure(
+                    acc = Self::get_possible_outputs_closure(
                         acc,
                         actual.clone(),
                         inventory_sub_process(&inventory, &process),
@@ -101,8 +101,8 @@ impl Node {
     /// Returns a restrained list of all unique possible combination of processes.
     /// Unique in such a way that if a combination `a:(2, 1, 1)` exists, a similar combination but ordered differently is not possible (ex: `b:(1, 2, 1)`)
     /// The process used to avoid similar combination returns a sorted list as a side effect.
-    pub fn get_possible_output(inventory: &Inventory, simulation: &Simulation, time: u32) -> Vec<(Vec<(Process, u32)>, Inventory)> {
-        Self::get_possible_output_closure(
+    pub fn get_possible_outputs(inventory: &Inventory, simulation: &Simulation, time: u32) -> Vec<(Vec<(Process, u32)>, Inventory)> {
+        Self::get_possible_outputs_closure(
             Vec::new(),
             Vec::new(),
             inventory.clone(),
@@ -127,65 +127,7 @@ impl Node {
                 inventory_add(&acc, &p.output)
             });
 
-        let possible_output = Self::get_possible_output(new_inventory, simulation, time);
+        let possible_output = Self::get_possible_outputs(new_inventory, simulation, time);
     }
     */
-}
-
-#[test]
-fn test_get_available_processes() {
-    let mut processes: Vec<Process> = Vec::new();
-
-    let mut inventory_1: Inventory = HashMap::new();
-    inventory_1.insert(String::from("machine"), 2);
-    inventory_1.insert(String::from("metal"), 10);
-    inventory_1.insert(String::from("gear"), 0);
-
-    // Gear process
-    let mut input: Inventory = HashMap::new();
-    input.insert(String::from("machine"), 1);
-    input.insert(String::from("metal"), 2);
-
-    let mut output: Inventory = HashMap::new();
-    output.insert(String::from("machine"), 1);
-    output.insert(String::from("gear"), 1);
-
-    processes.push(Process::new(String::from("do_gear"), input, output, 1));
-
-    let mut inventory_2: Inventory = HashMap::new();
-    inventory_2.insert(String::from("machine"), 2);
-    inventory_2.insert(String::from("metal"), 20);
-    inventory_2.insert(String::from("gear"), 4);
-
-    // Science process
-    let mut input: Inventory = HashMap::new();
-    input.insert(String::from("machine"), 1);
-    input.insert(String::from("metal"), 2);
-    input.insert(String::from("gear"), 1);
-
-    let mut output: Inventory = HashMap::new();
-    output.insert(String::from("machine"), 1);
-    output.insert(String::from("science"), 1);
-
-    processes.push(Process::new(String::from("do_science"), input, output, 5));
-
-    let sim_1 = Simulation::new(inventory_1.clone(), processes.clone(), (vec![], false));
-    let sim_2 = Simulation::new(inventory_2.clone(), processes.clone(), (vec![], false));
-
-    let res_1 = Node::get_available_processes(&inventory_1, &sim_1, 0);
-    let res_2 = Node::get_available_processes(&inventory_2, &sim_2, 0);
-
-    let valid_res_1 = vec![
-        (processes[0].clone(), 1),
-    ];
-
-    let valid_res_2 = vec![
-        (processes[0].clone(), 1),
-        (processes[1].clone(), 5),
-    ];
-
-    println!("Test of gear process");
-    assert_eq!(res_1, valid_res_1);
-    println!("Test of science process");
-    assert_eq!(res_2, valid_res_2);
 }
