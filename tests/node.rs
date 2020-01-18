@@ -50,8 +50,8 @@ fn get_test_subject() -> (Vec<Simulation>, Vec<Process>, Vec<Inventory>) {
 fn get_available_processes() {
     let (sims, processes, inventories) = get_test_subject();
 
-    let sim_1 = sims[0].clone();
-    let sim_2 = sims[1].clone();
+    let sim_1 = sims.get(0).unwrap();
+    let sim_2 = sims.get(1).unwrap();
 
     let inventory_1 = inventories[0].clone();
     let inventory_2 = inventories[1].clone();

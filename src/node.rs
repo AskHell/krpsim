@@ -35,7 +35,25 @@ impl Node {
         }
     }
 
-    fn separate_processes(processes: &Vec<(Process, u32)>, time: u32) -> (Vec<(Process, u32)>, Vec<(Process, u32)>) {
+    pub fn get_transversal_processes(&self) -> Vec<(Process, u32)> {
+        self.output.iter()
+            .filter_map(|p| {
+                let mut is_in = false;
+
+                for input in self.input.iter() {
+                    if input == p {
+                        is_in = true;
+                        break;
+                    }
+                }
+                match is_in {
+                    true => None,
+                    false => Some(p.clone())
+                }
+            }).collect()
+    }
+
+    pub fn separate_finished_processes(processes: &Vec<(Process, u32)>, time: u32) -> (Vec<(Process, u32)>, Vec<(Process, u32)>) {
         processes.iter()
             .fold((Vec::new(), Vec::new()), |(mut finished, mut active), (p, t)| {
                 if *t <= time {
