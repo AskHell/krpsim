@@ -1,26 +1,30 @@
 use std::str::FromStr;
 use std::collections::HashMap;
 
-use crate::ast::{
-    Inventory,
-    Process,
-    Simulation,
-    convert
+use crate::{
+    ast::{
+        ProcessBuilder,
+        SimulationBuilder,
+    },
+    inventory::{
+        Inventory,
+        convert
+    }
 };
 
 grammar;
 
-pub Simulation: Simulation = {
-    <i:Associative> <s:Simulation> => {
+pub SimulationBuilder: SimulationBuilder = {
+    <i:Associative> <s:SimulationBuilder> => {
         let (name, quantity) = i;
 
         s.add_inventory(name, quantity)
     },
-    <p:Process> <s:Simulation> => {
+    <p:ProcessBuilder> <s:SimulationBuilder> => {
         s.add_process(p)
     },
     <o:Optimize> Comment* => {
-        let s = Simulation::default();
+        let s = SimulationBuilder::default();
 
         s.optimize(o)
     },
@@ -41,11 +45,11 @@ Optimize: (Vec<String>, bool) = {
 };
 
 // name:(input1:0;input2:1;...):(output1:1;output2:4):time
-Process: Process = {
+ProcessBuilder: ProcessBuilder = {
     <n:Name> CompleteBy <i:AssociativeList?> CompleteBy <o:AssociativeList?> CompleteBy <d:Num> => {
         let i = i.unwrap_or(HashMap::new());
         let o = o.unwrap_or(HashMap::new());
-        Process::new(n, i, o, d)
+        ProcessBuilder::new(n, i, o, d)
     }
 };
 

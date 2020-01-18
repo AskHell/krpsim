@@ -1,12 +1,16 @@
 // auto-generated: "lalrpop 0.17.2"
-// sha256: 59546fe56076fe1ff8aa4e842e8d4ce5ed132103b8025727c53ee5b369ca5b
+// sha256: c458a117a525484becdafd07774c8a05bf8c0534963d2c0ae63864cc1fccf1e
 use std::str::FromStr;
 use std::collections::HashMap;
-use crate::ast::{
-    Inventory,
-    Process,
-    Simulation,
-    convert
+use crate::{
+    ast::{
+        ProcessBuilder,
+        SimulationBuilder,
+    },
+    inventory::{
+        Inventory,
+        convert
+    }
 };
 #[allow(unused_extern_crates)]
 extern crate lalrpop_util as __lalrpop_util;
@@ -14,16 +18,20 @@ extern crate lalrpop_util as __lalrpop_util;
 use self::__lalrpop_util::state_machine as __state_machine;
 
 #[cfg_attr(rustfmt, rustfmt_skip)]
-mod __parse__Simulation {
+mod __parse__SimulationBuilder {
     #![allow(non_snake_case, non_camel_case_types, unused_mut, unused_variables, unused_imports, unused_parens)]
 
     use std::str::FromStr;
     use std::collections::HashMap;
-    use crate::ast::{
-    Inventory,
-    Process,
-    Simulation,
-    convert
+    use crate::{
+    ast::{
+        ProcessBuilder,
+        SimulationBuilder,
+    },
+    inventory::{
+        Inventory,
+        convert
+    }
 };
     #[allow(unused_extern_crates)]
     extern crate lalrpop_util as __lalrpop_util;
@@ -47,8 +55,8 @@ mod __parse__Simulation {
         Variant11(Vec<String>),
         Variant12(u32),
         Variant13((Vec<String>, bool)),
-        Variant14(Process),
-        Variant15(Simulation),
+        Variant14(ProcessBuilder),
+        Variant15(SimulationBuilder),
     }
     const __ACTION: &'static [i8] = &[
         // State 0
@@ -539,7 +547,7 @@ mod __parse__Simulation {
         type Token = Token<'input>;
         type TokenIndex = usize;
         type Symbol = __Symbol<'input>;
-        type Success = Simulation;
+        type Success = SimulationBuilder;
         type StateIndex = i8;
         type Action = i8;
         type ReduceIndex = i8;
@@ -1009,15 +1017,15 @@ mod __parse__Simulation {
             _ => panic!("invalid reduction index {}", __reduce_index)
         }
     }
-    pub struct SimulationParser {
+    pub struct SimulationBuilderParser {
         builder: super::__intern_token::__MatcherBuilder,
         _priv: (),
     }
 
-    impl SimulationParser {
-        pub fn new() -> SimulationParser {
+    impl SimulationBuilderParser {
+        pub fn new() -> SimulationBuilderParser {
             let __builder = super::__intern_token::__MatcherBuilder::new();
-            SimulationParser {
+            SimulationBuilderParser {
                 builder: __builder,
                 _priv: (),
             }
@@ -1029,7 +1037,7 @@ mod __parse__Simulation {
         >(
             &self,
             input: &'input str,
-        ) -> Result<Simulation, __lalrpop_util::ParseError<usize, Token<'input>, &'static str>>
+        ) -> Result<SimulationBuilder, __lalrpop_util::ParseError<usize, Token<'input>, &'static str>>
         {
             let mut __tokens = self.builder.matcher(input);
             let __r = __state_machine::Parser::drive(
@@ -1051,7 +1059,7 @@ mod __parse__Simulation {
         __states: &mut ::std::vec::Vec<i8>,
         __symbols: &mut ::std::vec::Vec<(usize,__Symbol<'input>,usize)>,
         _: ::std::marker::PhantomData<(&'input ())>,
-    ) -> Option<Result<Simulation,__lalrpop_util::ParseError<usize, Token<'input>, &'static str>>>
+    ) -> Option<Result<SimulationBuilder,__lalrpop_util::ParseError<usize, Token<'input>, &'static str>>>
     {
         let (__pop_states, __nonterminal) = match __action {
             0 => {
@@ -1211,7 +1219,7 @@ mod __parse__Simulation {
                 __reduce51(input, __action, __lookahead_start, __states, __symbols, ::std::marker::PhantomData::<(&())>)
             }
             52 => {
-                // __Simulation = Simulation => ActionFn(0);
+                // __SimulationBuilder = SimulationBuilder => ActionFn(0);
                 let __sym0 = __pop_Variant15(__symbols);
                 let __start = __sym0.0.clone();
                 let __end = __sym0.2.clone();
@@ -1275,7 +1283,7 @@ mod __parse__Simulation {
       'input,
     >(
         __symbols: &mut ::std::vec::Vec<(usize,__Symbol<'input>,usize)>
-    ) -> (usize, Process, usize)
+    ) -> (usize, ProcessBuilder, usize)
      {
         match __symbols.pop().unwrap() {
             (__l, __Symbol::Variant14(__v), __r) => (__l, __v, __r),
@@ -1286,7 +1294,7 @@ mod __parse__Simulation {
       'input,
     >(
         __symbols: &mut ::std::vec::Vec<(usize,__Symbol<'input>,usize)>
-    ) -> (usize, Simulation, usize)
+    ) -> (usize, SimulationBuilder, usize)
      {
         match __symbols.pop().unwrap() {
             (__l, __Symbol::Variant15(__v), __r) => (__l, __v, __r),
@@ -2243,7 +2251,7 @@ mod __parse__Simulation {
         _: ::std::marker::PhantomData<(&'input ())>,
     ) -> (usize, usize)
     {
-        // Process = Name, CompleteBy, AssociativeList, CompleteBy, AssociativeList, CompleteBy, Num => ActionFn(48);
+        // ProcessBuilder = Name, CompleteBy, AssociativeList, CompleteBy, AssociativeList, CompleteBy, Num => ActionFn(48);
         let __sym6 = __pop_Variant12(__symbols);
         let __sym5 = __pop_Variant8(__symbols);
         let __sym4 = __pop_Variant6(__symbols);
@@ -2268,7 +2276,7 @@ mod __parse__Simulation {
         _: ::std::marker::PhantomData<(&'input ())>,
     ) -> (usize, usize)
     {
-        // Process = Name, CompleteBy, AssociativeList, CompleteBy, CompleteBy, Num => ActionFn(49);
+        // ProcessBuilder = Name, CompleteBy, AssociativeList, CompleteBy, CompleteBy, Num => ActionFn(49);
         let __sym5 = __pop_Variant12(__symbols);
         let __sym4 = __pop_Variant8(__symbols);
         let __sym3 = __pop_Variant8(__symbols);
@@ -2292,7 +2300,7 @@ mod __parse__Simulation {
         _: ::std::marker::PhantomData<(&'input ())>,
     ) -> (usize, usize)
     {
-        // Process = Name, CompleteBy, CompleteBy, AssociativeList, CompleteBy, Num => ActionFn(50);
+        // ProcessBuilder = Name, CompleteBy, CompleteBy, AssociativeList, CompleteBy, Num => ActionFn(50);
         let __sym5 = __pop_Variant12(__symbols);
         let __sym4 = __pop_Variant8(__symbols);
         let __sym3 = __pop_Variant6(__symbols);
@@ -2316,7 +2324,7 @@ mod __parse__Simulation {
         _: ::std::marker::PhantomData<(&'input ())>,
     ) -> (usize, usize)
     {
-        // Process = Name, CompleteBy, CompleteBy, CompleteBy, Num => ActionFn(51);
+        // ProcessBuilder = Name, CompleteBy, CompleteBy, CompleteBy, Num => ActionFn(51);
         let __sym4 = __pop_Variant12(__symbols);
         let __sym3 = __pop_Variant8(__symbols);
         let __sym2 = __pop_Variant8(__symbols);
@@ -2378,7 +2386,7 @@ mod __parse__Simulation {
         _: ::std::marker::PhantomData<(&'input ())>,
     ) -> (usize, usize)
     {
-        // Simulation = Associative, Simulation => ActionFn(1);
+        // SimulationBuilder = Associative, SimulationBuilder => ActionFn(1);
         let __sym1 = __pop_Variant15(__symbols);
         let __sym0 = __pop_Variant1(__symbols);
         let __start = __sym0.0.clone();
@@ -2398,7 +2406,7 @@ mod __parse__Simulation {
         _: ::std::marker::PhantomData<(&'input ())>,
     ) -> (usize, usize)
     {
-        // Simulation = Process, Simulation => ActionFn(2);
+        // SimulationBuilder = ProcessBuilder, SimulationBuilder => ActionFn(2);
         let __sym1 = __pop_Variant15(__symbols);
         let __sym0 = __pop_Variant14(__symbols);
         let __start = __sym0.0.clone();
@@ -2418,7 +2426,7 @@ mod __parse__Simulation {
         _: ::std::marker::PhantomData<(&'input ())>,
     ) -> (usize, usize)
     {
-        // Simulation = Optimize => ActionFn(66);
+        // SimulationBuilder = Optimize => ActionFn(66);
         let __sym0 = __pop_Variant13(__symbols);
         let __start = __sym0.0.clone();
         let __end = __sym0.2.clone();
@@ -2437,7 +2445,7 @@ mod __parse__Simulation {
         _: ::std::marker::PhantomData<(&'input ())>,
     ) -> (usize, usize)
     {
-        // Simulation = Optimize, Comment+ => ActionFn(67);
+        // SimulationBuilder = Optimize, Comment+ => ActionFn(67);
         let __sym1 = __pop_Variant9(__symbols);
         let __sym0 = __pop_Variant13(__symbols);
         let __start = __sym0.0.clone();
@@ -2447,17 +2455,21 @@ mod __parse__Simulation {
         (2, 23)
     }
 }
-pub use self::__parse__Simulation::SimulationParser;
+pub use self::__parse__SimulationBuilder::SimulationBuilderParser;
 #[cfg_attr(rustfmt, rustfmt_skip)]
 mod __intern_token {
     #![allow(unused_imports)]
     use std::str::FromStr;
     use std::collections::HashMap;
-    use crate::ast::{
-    Inventory,
-    Process,
-    Simulation,
-    convert
+    use crate::{
+    ast::{
+        ProcessBuilder,
+        SimulationBuilder,
+    },
+    inventory::{
+        Inventory,
+        convert
+    }
 };
     #[allow(unused_extern_crates)]
     extern crate lalrpop_util as __lalrpop_util;
@@ -2569,8 +2581,8 @@ fn __action0<
     'input,
 >(
     input: &'input str,
-    (_, __0, _): (usize, Simulation, usize),
-) -> Simulation
+    (_, __0, _): (usize, SimulationBuilder, usize),
+) -> SimulationBuilder
 {
     (__0)
 }
@@ -2581,8 +2593,8 @@ fn __action1<
 >(
     input: &'input str,
     (_, i, _): (usize, (String, u32), usize),
-    (_, s, _): (usize, Simulation, usize),
-) -> Simulation
+    (_, s, _): (usize, SimulationBuilder, usize),
+) -> SimulationBuilder
 {
     {
         let (name, quantity) = i;
@@ -2596,9 +2608,9 @@ fn __action2<
     'input,
 >(
     input: &'input str,
-    (_, p, _): (usize, Process, usize),
-    (_, s, _): (usize, Simulation, usize),
-) -> Simulation
+    (_, p, _): (usize, ProcessBuilder, usize),
+    (_, s, _): (usize, SimulationBuilder, usize),
+) -> SimulationBuilder
 {
     {
         s.add_process(p)
@@ -2612,10 +2624,10 @@ fn __action3<
     input: &'input str,
     (_, o, _): (usize, (Vec<String>, bool), usize),
     (_, _, _): (usize, ::std::vec::Vec<&'input str>, usize),
-) -> Simulation
+) -> SimulationBuilder
 {
     {
-        let s = Simulation::default();
+        let s = SimulationBuilder::default();
 
         s.optimize(o)
     }
@@ -2656,12 +2668,12 @@ fn __action5<
     (_, o, _): (usize, ::std::option::Option<Inventory>, usize),
     (_, _, _): (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
     (_, d, _): (usize, u32, usize),
-) -> Process
+) -> ProcessBuilder
 {
     {
         let i = i.unwrap_or(HashMap::new());
         let o = o.unwrap_or(HashMap::new());
-        Process::new(n, i, o, d)
+        ProcessBuilder::new(n, i, o, d)
     }
 }
 
@@ -3352,7 +3364,7 @@ fn __action48<
     __4: (usize, Inventory, usize),
     __5: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
     __6: (usize, u32, usize),
-) -> Process
+) -> ProcessBuilder
 {
     let __start0 = __2.0.clone();
     let __end0 = __2.2.clone();
@@ -3391,7 +3403,7 @@ fn __action49<
     __3: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
     __4: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
     __5: (usize, u32, usize),
-) -> Process
+) -> ProcessBuilder
 {
     let __start0 = __2.0.clone();
     let __end0 = __2.2.clone();
@@ -3431,7 +3443,7 @@ fn __action50<
     __3: (usize, Inventory, usize),
     __4: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
     __5: (usize, u32, usize),
-) -> Process
+) -> ProcessBuilder
 {
     let __start0 = __1.2.clone();
     let __end0 = __2.0.clone();
@@ -3470,7 +3482,7 @@ fn __action51<
     __2: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
     __3: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
     __4: (usize, u32, usize),
-) -> Process
+) -> ProcessBuilder
 {
     let __start0 = __1.2.clone();
     let __end0 = __2.0.clone();
@@ -3836,7 +3848,7 @@ fn __action66<
 >(
     input: &'input str,
     __0: (usize, (Vec<String>, bool), usize),
-) -> Simulation
+) -> SimulationBuilder
 {
     let __start0 = __0.2.clone();
     let __end0 = __0.2.clone();
@@ -3860,7 +3872,7 @@ fn __action67<
     input: &'input str,
     __0: (usize, (Vec<String>, bool), usize),
     __1: (usize, ::std::vec::Vec<&'input str>, usize),
-) -> Simulation
+) -> SimulationBuilder
 {
     let __start0 = __1.0.clone();
     let __end0 = __1.2.clone();

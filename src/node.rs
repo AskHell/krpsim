@@ -1,10 +1,12 @@
 use super::ast::{
     Simulation,
     Process,
+};
+
+use super::inventory::{
     Inventory,
     inventory_add,
     inventory_compare,
-    inventory_sub_process
 };
 
 pub struct Node {
@@ -115,7 +117,7 @@ impl Node {
                     acc = Self::get_possible_outputs_closure(
                         acc,
                         actual.clone(),
-                        inventory_sub_process(&inventory, &process),
+                        process.apply_to(inventory.clone()),
                         simulation,
                         time
                     );
@@ -146,7 +148,7 @@ impl Node {
             .min()
             .unwrap();
 
-        let (finished, input) = Self::separate_processes(&self.output, time);
+        let (finished, input) = Self::separate_finished_processes(&self.output, time);
 
         let new_inventory = finished
             .into_iter()

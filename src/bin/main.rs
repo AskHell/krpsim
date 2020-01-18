@@ -4,12 +4,12 @@ use std::io::Read;
 use clap::{Arg, App};
 
 use krpsim::{
-    parser::SimulationParser,
-    ast::Simulation
+    parser::SimulationBuilderParser,
+    ast::SimulationBuilder
 };
 
-fn parse(content: String) -> Result<Simulation, String> {
-    SimulationParser::new()
+fn parse(content: String) -> Result<SimulationBuilder, String> {
+    SimulationBuilderParser::new()
         .parse(&content)
         .map_err(|err| format!("{}", err))
 }
