@@ -29,10 +29,8 @@ pub struct Process {
     pub h: u32,
 }
 
-impl From<(ProcessBuilder, &SimulationBuilder)> for Process {
-    fn from((p, s): (ProcessBuilder, &SimulationBuilder)) -> Self {
-        let h: u32 = 0;
-
+impl From<(ProcessBuilder, u32)> for Process {
+    fn from((p, h): (ProcessBuilder, u32)) -> Self {
         Process {
             name: p.name,
             input: p.input,
@@ -55,6 +53,16 @@ impl Process {
             }
         }
         res
+    }
+
+    pub fn new(name: String, input: Inventory, output: Inventory, duration: u32, h: u32) -> Self {
+        Self {
+            name,
+            input,
+            output,
+            duration,
+            h
+        }
     }
 }
 
@@ -104,6 +112,34 @@ impl SimulationBuilder {
         self.optimize_time = optimize_time;
         self
     }
+
+    fn compute_heuristic_graph(&self, commodity: &String) -> u32 {
+        let mut full_h = 0;
+
+        for p in self.processes.iter() {
+            let mut h = 0;
+
+            if let Some(n) = p.output.get(commodity) {
+                h += 1;
+                for (key, value) in p.input.iter() {
+                    h += self.compute_heuristic_graph(key) * value + n;
+                }
+            }
+            full_h += h;
+        }
+
+        full_h
+    }
+
+    pub fn compute_heuristic_of_process(&self, p: &ProcessBuilder) -> u32 {
+        let mut h = 0;
+
+        for (key, value) in p.input.iter() {
+            h += value * self.compute_heuristic_graph(key);
+        }
+
+        h
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -119,7 +155,11 @@ impl From<SimulationBuilder> for Simulation {
         let processes = s.processes
             .clone()
             .into_iter()
-            .map(|p| Process::from((p, &s)))
+            .map(|p| {
+                let h = s.compute_heuristic_of_process(&p);
+
+                Process::from((p, h))
+            })
             .collect();
 
         Simulation {
@@ -127,6 +167,19 @@ impl From<SimulationBuilder> for Simulation {
             processes,
             optimize: s.optimize,
             optimize_time: s.optimize_time,
+        }
+    }
+}
+
+impl Simulation {
+    pub fn new(inventory: Inventory, processes: Vec<Process>, optimize: (Vec<String>, bool)) -> Self {
+        let (optimize, optimize_time) = optimize;
+
+        Self {
+            inventory,
+            processes,
+            optimize,
+            optimize_time,
         }
     }
 }

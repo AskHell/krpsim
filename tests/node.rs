@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use krpsim::node::*;
 use krpsim::ast::*;
+use krpsim::inventory::*;
 
 #[allow(dead_code)]
 fn get_test_subject() -> (Vec<Simulation>, Vec<Process>, Vec<Inventory>) {
@@ -21,7 +22,7 @@ fn get_test_subject() -> (Vec<Simulation>, Vec<Process>, Vec<Inventory>) {
     output.insert(String::from("machine"), 1);
     output.insert(String::from("gear"), 1);
 
-    processes.push(Process::new(String::from("do_gear"), input, output, 1));
+    processes.push(Process::new(String::from("do_gear"), input, output, 1, 0));
 
     let mut inventory_2: Inventory = HashMap::new();
     inventory_2.insert(String::from("machine"), 2);
@@ -38,7 +39,7 @@ fn get_test_subject() -> (Vec<Simulation>, Vec<Process>, Vec<Inventory>) {
     output.insert(String::from("machine"), 1);
     output.insert(String::from("science"), 1);
 
-    processes.push(Process::new(String::from("do_science"), input, output, 5));
+    processes.push(Process::new(String::from("do_science"), input, output, 5, 0));
 
     let sim_1 = Simulation::new(inventory_1.clone(), processes.clone(), (vec![], false));
     let sim_2 = Simulation::new(inventory_2.clone(), processes.clone(), (vec![], false));
@@ -84,15 +85,9 @@ fn get_possible_outputs() {
         0
     );
 
-    let inv_1 = inventory_sub_process(
-        &inventories[0].clone(),
-        processes.get(0).unwrap()
-    );
+    let inv_1 = processes.get(0).unwrap().apply_to(inventories[0].clone());
 
-    let inv_2 = inventory_sub_process(
-        &inv_1.clone(),
-        processes.get(0).unwrap()
-    );
+    let inv_2 = processes.get(0).unwrap().apply_to(inv_1.clone());
 
     let truth_1 = vec![
         (vec![], inventories[0].clone()),
