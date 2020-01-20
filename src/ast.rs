@@ -113,30 +113,39 @@ impl SimulationBuilder {
         self
     }
 
-    fn compute_heuristic_graph(&self, commodity: &String) -> u32 {
+    fn compute_heuristic_graph(&self, commodity: &String, tabs: u32) -> u32 {
+        let space = (0..tabs).fold(String::new(), |acc, _| format!("    {}", acc));
         let mut full_h = 0;
 
+        println!("{}{}:", space, commodity);
         for p in self.processes.iter() {
             let mut h = 0;
 
             if let Some(n) = p.output.get(commodity) {
-                h += 1;
-                for (key, value) in p.input.iter() {
-                    h += self.compute_heuristic_graph(key) * value + n;
+                if p.input.get(commodity).is_none() { // ignore if commodity is in both input and output
+                    println!("    {}{}:", space, p.name);
+                    h += n;
+                    for (key, value) in p.input.iter() {
+                        h += value * self.compute_heuristic_graph(key, tabs + 1);
+                    }
                 }
             }
             full_h += h;
         }
 
+        println!("{}|-> {}", space, full_h);
         full_h
     }
 
     pub fn compute_heuristic_of_process(&self, p: &ProcessBuilder) -> u32 {
         let mut h = 0;
+        println!("{}:", p.name);
 
         for (key, value) in p.input.iter() {
-            h += value * self.compute_heuristic_graph(key);
+            h += value * self.compute_heuristic_graph(key, 1);
         }
+
+        if h == 0 { h = 1}
 
         h
     }

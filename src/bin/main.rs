@@ -5,13 +5,14 @@ use clap::{Arg, App};
 
 use krpsim::{
     parser::SimulationBuilderParser,
-    ast::SimulationBuilder
+    ast::Simulation,
 };
 
-fn parse(content: String) -> Result<SimulationBuilder, String> {
+fn parse(content: String) -> Result<Simulation, String> {
     SimulationBuilderParser::new()
         .parse(&content)
         .map_err(|err| format!("{}", err))
+        .map(|simbuilder| Simulation::from(simbuilder))
 }
 
 fn main() -> Result<(), ()> {
@@ -47,7 +48,9 @@ fn main() -> Result<(), ()> {
     };
 
     simulation
-        .map(|sim| {})
+        .map(|sim| {
+            println!("{:#?}", sim);
+        })
         .map_err(|err| {
             println!("{}", err);
         })
