@@ -11,7 +11,7 @@ pub fn convert<T: Eq + Hash, U>(input: Vec<(T, U)>) -> HashMap<T, U> {
     res
 }
 
-pub type Inventory = HashMap<String, u32>;
+pub type Inventory = HashMap<String, i32>;
 
 pub fn inventory_add(left: &Inventory, right: &Inventory) -> Inventory {
     let mut res: Inventory = HashMap::new();

@@ -1,5 +1,5 @@
 // auto-generated: "lalrpop 0.17.2"
-// sha256: c458a117a525484becdafd07774c8a05bf8c0534963d2c0ae63864cc1fccf1e
+// sha256: 3349f02cc0818cdfc46c10278fecea7e8e9b5a7a2a65136fb1957dd816a78e
 use std::str::FromStr;
 use std::collections::HashMap;
 use crate::{
@@ -42,18 +42,18 @@ mod __parse__SimulationBuilder {
     pub enum __Symbol<'input>
      {
         Variant0(&'input str),
-        Variant1((String, u32)),
-        Variant2(::std::vec::Vec<(String, u32)>),
+        Variant1((String, i32)),
+        Variant2(::std::vec::Vec<(String, i32)>),
         Variant3(String),
         Variant4(::std::vec::Vec<String>),
-        Variant5(::std::option::Option<(String, u32)>),
+        Variant5(::std::option::Option<(String, i32)>),
         Variant6(Inventory),
         Variant7(::std::option::Option<Inventory>),
         Variant8((::std::vec::Vec<&'input str>, &'input str)),
         Variant9(::std::vec::Vec<&'input str>),
         Variant10(::std::option::Option<String>),
         Variant11(Vec<String>),
-        Variant12(u32),
+        Variant12(i32),
         Variant13((Vec<String>, bool)),
         Variant14(ProcessBuilder),
         Variant15(SimulationBuilder),
@@ -1239,7 +1239,7 @@ mod __parse__SimulationBuilder {
       'input,
     >(
         __symbols: &mut ::std::vec::Vec<(usize,__Symbol<'input>,usize)>
-    ) -> (usize, (String, u32), usize)
+    ) -> (usize, (String, i32), usize)
      {
         match __symbols.pop().unwrap() {
             (__l, __Symbol::Variant1(__v), __r) => (__l, __v, __r),
@@ -1327,7 +1327,7 @@ mod __parse__SimulationBuilder {
       'input,
     >(
         __symbols: &mut ::std::vec::Vec<(usize,__Symbol<'input>,usize)>
-    ) -> (usize, u32, usize)
+    ) -> (usize, i32, usize)
      {
         match __symbols.pop().unwrap() {
             (__l, __Symbol::Variant12(__v), __r) => (__l, __v, __r),
@@ -1338,7 +1338,7 @@ mod __parse__SimulationBuilder {
       'input,
     >(
         __symbols: &mut ::std::vec::Vec<(usize,__Symbol<'input>,usize)>
-    ) -> (usize, ::std::option::Option<(String, u32)>, usize)
+    ) -> (usize, ::std::option::Option<(String, i32)>, usize)
      {
         match __symbols.pop().unwrap() {
             (__l, __Symbol::Variant5(__v), __r) => (__l, __v, __r),
@@ -1371,7 +1371,7 @@ mod __parse__SimulationBuilder {
       'input,
     >(
         __symbols: &mut ::std::vec::Vec<(usize,__Symbol<'input>,usize)>
-    ) -> (usize, ::std::vec::Vec<(String, u32)>, usize)
+    ) -> (usize, ::std::vec::Vec<(String, i32)>, usize)
      {
         match __symbols.pop().unwrap() {
             (__l, __Symbol::Variant2(__v), __r) => (__l, __v, __r),
@@ -2592,7 +2592,7 @@ fn __action1<
     'input,
 >(
     input: &'input str,
-    (_, i, _): (usize, (String, u32), usize),
+    (_, i, _): (usize, (String, i32), usize),
     (_, s, _): (usize, SimulationBuilder, usize),
 ) -> SimulationBuilder
 {
@@ -2667,7 +2667,7 @@ fn __action5<
     (_, _, _): (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
     (_, o, _): (usize, ::std::option::Option<Inventory>, usize),
     (_, _, _): (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
-    (_, d, _): (usize, u32, usize),
+    (_, d, _): (usize, i32, usize),
 ) -> ProcessBuilder
 {
     {
@@ -2683,8 +2683,8 @@ fn __action6<
 >(
     input: &'input str,
     (_, _, _): (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
-    (_, l, _): (usize, ::std::vec::Vec<(String, u32)>, usize),
-    (_, e, _): (usize, ::std::option::Option<(String, u32)>, usize),
+    (_, l, _): (usize, ::std::vec::Vec<(String, i32)>, usize),
+    (_, e, _): (usize, ::std::option::Option<(String, i32)>, usize),
     (_, _, _): (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
 ) -> Inventory
 {
@@ -2722,8 +2722,8 @@ fn __action8<
     input: &'input str,
     (_, a, _): (usize, String, usize),
     (_, _, _): (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
-    (_, b, _): (usize, u32, usize),
-) -> (String, u32)
+    (_, b, _): (usize, i32, usize),
+) -> (String, i32)
 {
     {
         (a, b)
@@ -2785,9 +2785,9 @@ fn __action13<
     input: &'input str,
     (_, _, _): (usize, ::std::vec::Vec<&'input str>, usize),
     (_, __0, _): (usize, &'input str, usize),
-) -> u32
+) -> i32
 {
-    u32::from_str(__0).unwrap()
+    i32::from_str(__0).unwrap()
 }
 
 #[allow(unused_variables)]
@@ -2876,8 +2876,8 @@ fn __action21<
     'input,
 >(
     input: &'input str,
-    (_, __0, _): (usize, (String, u32), usize),
-) -> ::std::option::Option<(String, u32)>
+    (_, __0, _): (usize, (String, i32), usize),
+) -> ::std::option::Option<(String, i32)>
 {
     Some(__0)
 }
@@ -2889,7 +2889,7 @@ fn __action22<
     input: &'input str,
     __lookbehind: &usize,
     __lookahead: &usize,
-) -> ::std::option::Option<(String, u32)>
+) -> ::std::option::Option<(String, i32)>
 {
     None
 }
@@ -2901,7 +2901,7 @@ fn __action23<
     input: &'input str,
     __lookbehind: &usize,
     __lookahead: &usize,
-) -> ::std::vec::Vec<(String, u32)>
+) -> ::std::vec::Vec<(String, i32)>
 {
     vec![]
 }
@@ -2911,8 +2911,8 @@ fn __action24<
     'input,
 >(
     input: &'input str,
-    (_, v, _): (usize, ::std::vec::Vec<(String, u32)>, usize),
-) -> ::std::vec::Vec<(String, u32)>
+    (_, v, _): (usize, ::std::vec::Vec<(String, i32)>, usize),
+) -> ::std::vec::Vec<(String, i32)>
 {
     v
 }
@@ -2922,9 +2922,9 @@ fn __action25<
     'input,
 >(
     input: &'input str,
-    (_, __0, _): (usize, (String, u32), usize),
+    (_, __0, _): (usize, (String, i32), usize),
     (_, _, _): (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
-) -> (String, u32)
+) -> (String, i32)
 {
     (__0)
 }
@@ -3003,8 +3003,8 @@ fn __action32<
     'input,
 >(
     input: &'input str,
-    (_, __0, _): (usize, (String, u32), usize),
-) -> ::std::vec::Vec<(String, u32)>
+    (_, __0, _): (usize, (String, i32), usize),
+) -> ::std::vec::Vec<(String, i32)>
 {
     vec![__0]
 }
@@ -3014,9 +3014,9 @@ fn __action33<
     'input,
 >(
     input: &'input str,
-    (_, v, _): (usize, ::std::vec::Vec<(String, u32)>, usize),
-    (_, e, _): (usize, (String, u32), usize),
-) -> ::std::vec::Vec<(String, u32)>
+    (_, v, _): (usize, ::std::vec::Vec<(String, i32)>, usize),
+    (_, e, _): (usize, (String, i32), usize),
+) -> ::std::vec::Vec<(String, i32)>
 {
     { let mut v = v; v.push(e); v }
 }
@@ -3049,9 +3049,9 @@ fn __action36<
     'input,
 >(
     input: &'input str,
-    __0: (usize, (String, u32), usize),
+    __0: (usize, (String, i32), usize),
     __1: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
-) -> ::std::vec::Vec<(String, u32)>
+) -> ::std::vec::Vec<(String, i32)>
 {
     let __start0 = __0.0.clone();
     let __end0 = __1.2.clone();
@@ -3072,10 +3072,10 @@ fn __action37<
     'input,
 >(
     input: &'input str,
-    __0: (usize, ::std::vec::Vec<(String, u32)>, usize),
-    __1: (usize, (String, u32), usize),
+    __0: (usize, ::std::vec::Vec<(String, i32)>, usize),
+    __1: (usize, (String, i32), usize),
     __2: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
-) -> ::std::vec::Vec<(String, u32)>
+) -> ::std::vec::Vec<(String, i32)>
 {
     let __start0 = __1.0.clone();
     let __end0 = __2.2.clone();
@@ -3098,7 +3098,7 @@ fn __action38<
 >(
     input: &'input str,
     __0: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
-    __1: (usize, ::std::option::Option<(String, u32)>, usize),
+    __1: (usize, ::std::option::Option<(String, i32)>, usize),
     __2: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
 ) -> Inventory
 {
@@ -3125,8 +3125,8 @@ fn __action39<
 >(
     input: &'input str,
     __0: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
-    __1: (usize, ::std::vec::Vec<(String, u32)>, usize),
-    __2: (usize, ::std::option::Option<(String, u32)>, usize),
+    __1: (usize, ::std::vec::Vec<(String, i32)>, usize),
+    __2: (usize, ::std::option::Option<(String, i32)>, usize),
     __3: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
 ) -> Inventory
 {
@@ -3254,7 +3254,7 @@ fn __action44<
 >(
     input: &'input str,
     __0: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
-    __1: (usize, (String, u32), usize),
+    __1: (usize, (String, i32), usize),
     __2: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
 ) -> Inventory
 {
@@ -3304,8 +3304,8 @@ fn __action46<
 >(
     input: &'input str,
     __0: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
-    __1: (usize, ::std::vec::Vec<(String, u32)>, usize),
-    __2: (usize, (String, u32), usize),
+    __1: (usize, ::std::vec::Vec<(String, i32)>, usize),
+    __2: (usize, (String, i32), usize),
     __3: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
 ) -> Inventory
 {
@@ -3331,7 +3331,7 @@ fn __action47<
 >(
     input: &'input str,
     __0: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
-    __1: (usize, ::std::vec::Vec<(String, u32)>, usize),
+    __1: (usize, ::std::vec::Vec<(String, i32)>, usize),
     __2: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
 ) -> Inventory
 {
@@ -3363,7 +3363,7 @@ fn __action48<
     __3: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
     __4: (usize, Inventory, usize),
     __5: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
-    __6: (usize, u32, usize),
+    __6: (usize, i32, usize),
 ) -> ProcessBuilder
 {
     let __start0 = __2.0.clone();
@@ -3402,7 +3402,7 @@ fn __action49<
     __2: (usize, Inventory, usize),
     __3: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
     __4: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
-    __5: (usize, u32, usize),
+    __5: (usize, i32, usize),
 ) -> ProcessBuilder
 {
     let __start0 = __2.0.clone();
@@ -3442,7 +3442,7 @@ fn __action50<
     __2: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
     __3: (usize, Inventory, usize),
     __4: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
-    __5: (usize, u32, usize),
+    __5: (usize, i32, usize),
 ) -> ProcessBuilder
 {
     let __start0 = __1.2.clone();
@@ -3481,7 +3481,7 @@ fn __action51<
     __1: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
     __2: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
     __3: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
-    __4: (usize, u32, usize),
+    __4: (usize, i32, usize),
 ) -> ProcessBuilder
 {
     let __start0 = __1.2.clone();
@@ -3656,7 +3656,7 @@ fn __action58<
 >(
     input: &'input str,
     __0: (usize, &'input str, usize),
-) -> u32
+) -> i32
 {
     let __start0 = __0.0.clone();
     let __end0 = __0.0.clone();
@@ -3680,7 +3680,7 @@ fn __action59<
     input: &'input str,
     __0: (usize, ::std::vec::Vec<&'input str>, usize),
     __1: (usize, &'input str, usize),
-) -> u32
+) -> i32
 {
     let __start0 = __0.0.clone();
     let __end0 = __0.2.clone();

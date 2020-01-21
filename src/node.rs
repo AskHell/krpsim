@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use super::ast::{
     Simulation,
     Process,
@@ -9,23 +11,25 @@ use super::inventory::{
     inventory_compare,
 };
 
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Node {
     pub parent: usize,
     pub inventory: Inventory,
-    pub input: Vec<(Process, u32)>,
-    pub output: Vec<(Process, u32)>,
-    pub h: u32,
-    pub time: u32,
+    pub input: Vec<(Process, i32)>,
+    pub output: Vec<(Process, i32)>,
+    pub h: i32,
+    pub time: i32,
+    pub f: i32,
 }
 
 impl Node {
     pub fn new(
         parent: usize,
         inventory: Inventory,
-        input: Vec<(Process, u32)>,
-        output: Vec<(Process, u32)>,
-        h: u32,
-        time: u32
+        input: Vec<(Process, i32)>,
+        output: Vec<(Process, i32)>,
+        h: i32,
+        time: i32
     ) -> Self {
         Node {
             parent,
@@ -33,11 +37,12 @@ impl Node {
             input,
             output,
             h,
-            time
+            time,
+            f: h - time,
         }
     }
 
-    pub fn get_transversal_processes(&self) -> Vec<(Process, u32)> {
+    pub fn get_transversal_processes(&self) -> Vec<(Process, i32)> {
         self.output.iter()
             .filter_map(|p| {
                 let mut is_in = false;
@@ -55,7 +60,7 @@ impl Node {
             }).collect()
     }
 
-    pub fn separate_finished_processes(processes: &Vec<(Process, u32)>, time: u32) -> (Vec<(Process, u32)>, Vec<(Process, u32)>) {
+    pub fn separate_finished_processes(processes: &Vec<(Process, i32)>, time: i32) -> (Vec<(Process, i32)>, Vec<(Process, i32)>) {
         processes.iter()
             .fold((Vec::new(), Vec::new()), |(mut finished, mut active), (p, t)| {
                 if *t <= time {
@@ -67,7 +72,7 @@ impl Node {
             })
     }
 
-    pub fn get_available_processes(inventory: &Inventory, simulation: &Simulation, time: u32) -> Vec<(Process, u32)> {
+    pub fn get_available_processes(inventory: &Inventory, simulation: &Simulation, time: i32) -> Vec<(Process, i32)> {
         simulation.processes.clone().into_iter().filter_map(|p| {
             match inventory_compare(&p.input, inventory) {
                 true => Some(p),
@@ -86,12 +91,12 @@ impl Node {
     }
 
     fn get_possible_outputs_closure(
-        mut acc: Vec<(Vec<(Process, u32)>, Inventory)>,
-        mut actual: Vec<(Process, u32)>,
+        mut acc: Vec<(Vec<(Process, i32)>, Inventory)>,
+        mut actual: Vec<(Process, i32)>,
         inventory: Inventory,
         simulation: &Simulation,
-        time: u32
-    ) -> Vec<(Vec<(Process, u32)>, Inventory)> {
+        time: i32
+    ) -> Vec<(Vec<(Process, i32)>, Inventory)> {
         let available = Self::get_available_processes(&inventory, simulation, time);
 
         acc.push((actual.clone(), inventory.clone()));
@@ -130,7 +135,7 @@ impl Node {
     /// Returns a restrained list of all unique possible combination of processes.
     /// Unique in such a way that if a combination `a:(2, 1, 1)` exists, a similar combination but ordered differently is not possible (ex: `b:(1, 2, 1)`)
     /// The process used to avoid similar combination returns a sorted list as a side effect.
-    pub fn get_possible_outputs(inventory: &Inventory, simulation: &Simulation, time: u32) -> Vec<(Vec<(Process, u32)>, Inventory)> {
+    pub fn get_possible_outputs(inventory: &Inventory, simulation: &Simulation, time: i32) -> Vec<(Vec<(Process, i32)>, Inventory)> {
         Self::get_possible_outputs_closure(
             Vec::new(),
             Vec::new(),
@@ -146,7 +151,7 @@ impl Node {
             .iter()
             .map(|(_, t)| t.clone())
             .min()
-            .unwrap();
+            .unwrap_or(0);
 
         let (finished, input) = Self::separate_finished_processes(&self.output, time);
 
@@ -166,7 +171,26 @@ impl Node {
                 output,
                 0,
                 time
-            )
+            ).apply_heuristic(self)
         ).collect()
+    }
+
+    fn apply_heuristic(mut self, old: &Self) -> Self {
+        let h = self.output.iter().fold(0, |acc, (p, _)| acc + p.h) + old.h;
+
+        self.h = h;
+        self
+    }
+}
+
+impl PartialOrd for Node {
+    fn partial_cmp(&self, other: &Node) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Node {
+    fn cmp(&self, other: &Node) -> Ordering {
+        self.h.cmp(&other.h)
     }
 }

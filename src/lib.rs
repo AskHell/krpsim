@@ -3,3 +3,4 @@ pub mod ast;
 pub mod node;
 pub mod heuristic;
 pub mod inventory;
+pub mod solver;

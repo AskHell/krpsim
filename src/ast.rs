@@ -6,11 +6,11 @@ pub struct ProcessBuilder {
     pub name: String,
     pub input: Inventory,
     pub output: Inventory,
-    pub duration: u32,
+    pub duration: i32,
 }
 
 impl ProcessBuilder {
-    pub fn new(name: String, input: Inventory, output: Inventory, duration: u32) -> Self {
+    pub fn new(name: String, input: Inventory, output: Inventory, duration: i32) -> Self {
         Self {
             name,
             input,
@@ -25,12 +25,12 @@ pub struct Process {
     pub name: String,
     pub input: Inventory,
     pub output: Inventory,
-    pub duration: u32,
-    pub h: u32,
+    pub duration: i32,
+    pub h: i32,
 }
 
-impl From<(ProcessBuilder, u32)> for Process {
-    fn from((p, h): (ProcessBuilder, u32)) -> Self {
+impl From<(ProcessBuilder, i32)> for Process {
+    fn from((p, h): (ProcessBuilder, i32)) -> Self {
         Process {
             name: p.name,
             input: p.input,
@@ -55,7 +55,7 @@ impl Process {
         res
     }
 
-    pub fn new(name: String, input: Inventory, output: Inventory, duration: u32, h: u32) -> Self {
+    pub fn new(name: String, input: Inventory, output: Inventory, duration: i32, h: i32) -> Self {
         Self {
             name,
             input,
@@ -95,7 +95,7 @@ impl SimulationBuilder {
         }
     }
 
-    pub fn add_inventory(mut self, name: String, quantity: u32) -> Self {
+    pub fn add_inventory(mut self, name: String, quantity: i32) -> Self {
         self.inventory.insert(name, quantity);
         self
     }
@@ -113,7 +113,7 @@ impl SimulationBuilder {
         self
     }
 
-    fn compute_heuristic_graph(&self, commodity: &String, tabs: u32) -> u32 {
+    fn compute_heuristic_graph(&self, commodity: &String, tabs: i32) -> i32 {
         let space = (0..tabs).fold(String::new(), |acc, _| format!("    {}", acc));
         let mut full_h = 0;
 
@@ -137,7 +137,7 @@ impl SimulationBuilder {
         full_h
     }
 
-    pub fn compute_heuristic_of_process(&self, p: &ProcessBuilder) -> u32 {
+    pub fn compute_heuristic_of_process(&self, p: &ProcessBuilder) -> i32 {
         let mut h = 0;
         println!("{}:", p.name);
 

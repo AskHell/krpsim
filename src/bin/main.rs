@@ -6,6 +6,7 @@ use clap::{Arg, App};
 use krpsim::{
     parser::SimulationBuilderParser,
     ast::Simulation,
+    solver::algo,
 };
 
 fn parse(content: String) -> Result<Simulation, String> {
@@ -50,6 +51,11 @@ fn main() -> Result<(), ()> {
     simulation
         .map(|sim| {
             println!("{:#?}", sim);
+            let res = algo(sim);
+
+            if let Ok(res) = res {
+                println!("{:#?}", res);
+            }
         })
         .map_err(|err| {
             println!("{}", err);
