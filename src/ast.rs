@@ -6,11 +6,11 @@ pub struct ProcessBuilder {
     pub name: String,
     pub input: Vec<Resource>,
     pub output: Vec<Resource>,
-    pub duration: i32
+    pub duration: usize
 }
 
 impl ProcessBuilder {
-    pub fn new(name: String, input: Vec<Resource>, output: Vec<Resource>, duration: i32) -> Self {
+    pub fn new(name: String, input: Vec<Resource>, output: Vec<Resource>, duration: usize) -> Self {
         Self {
             name,
             input,
@@ -31,15 +31,15 @@ pub struct Process {
     pub name: String,
     pub input: Vec<Resource>,
     pub output: Vec<Resource>,
-    pub duration: i32
+    pub duration: usize
 }
 
 impl From<&ProcessBuilder> for Process {
     fn from(p: &ProcessBuilder) -> Self {
         Process {
-            name: p.name,
-            input: p.input,
-            output: p.output,
+            name: p.name.clone(),
+            input: p.input.clone(),
+            output: p.output.clone(),
             duration: p.duration,
         }
     }
@@ -59,7 +59,7 @@ impl Process {
     //     res
     // }
 
-    pub fn new(name: String, input: Vec<Resource>, output: Vec<Resource>, duration: i32) -> Self {
+    pub fn new(name: String, input: Vec<Resource>, output: Vec<Resource>, duration: usize) -> Self {
         Self {
             name,
             input,
@@ -104,7 +104,7 @@ impl SimulationBuilder {
     }
 
     pub fn add_process(mut self, process: ProcessBuilder) -> Self {
-        self.processes.insert(process.name, process);
+        self.processes.insert(process.name.clone(), process);
         self
     }
 
@@ -116,7 +116,7 @@ impl SimulationBuilder {
         self
     }
 
-    // fn compute_heuristic_graph(&self, commodity: &String, tabs: i32) -> i32 {
+    // fn compute_heuristic_graph(&self, commodity: &String, tabs: usize) -> usize {
     //     let space = (0..tabs).fold(String::new(), |acc, _| format!("    {}", acc));
     //     let mut full_h = 0;
 
@@ -140,7 +140,7 @@ impl SimulationBuilder {
     //     full_h
     // }
 
-    // pub fn compute_heuristic_of_process(&self, p: &ProcessBuilder) -> i32 {
+    // pub fn compute_heuristic_of_process(&self, p: &ProcessBuilder) -> usize {
     //     let mut h = 0;
     //     println!("{}:", p.name);
 

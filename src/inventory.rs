@@ -1,15 +1,15 @@
 use std::collections::HashMap;
-// use std::hash::Hash;
+use std::hash::Hash;
 
-/// Converts a Vec<(T, U)> in a HashMap<T, U>
-// pub fn convert<T: Eq + Hash, U>(input: Vec<(T, U)>) -> HashMap<T, U> {
-//     let mut res: HashMap<T, U> = HashMap::new();
+// Converts a Vec<(T, U)> in a HashMap<T, U>
+pub fn convert<T: Eq + Hash, U>(input: Vec<(T, U)>) -> HashMap<T, U> {
+    let mut res: HashMap<T, U> = HashMap::new();
 
-//     for (t, u) in input.into_iter() {
-//         res.insert(t, u);
-//     }
-//     res
-// }
+    for (t, u) in input.into_iter() {
+        res.insert(t, u);
+    }
+    res
+}
 
 pub type Inventory = HashMap<String, usize>;
 
