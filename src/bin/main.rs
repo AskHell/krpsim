@@ -31,7 +31,7 @@ fn main() -> Result<(), ()> {
     let file = matches
         .value_of("FILE")
         .unwrap();
-    let delay = matches
+    let _delay = matches
         .value_of("DELAY")
         .unwrap_or("0")
         .parse()
@@ -47,16 +47,11 @@ fn main() -> Result<(), ()> {
         Err(error) => Err(format!("{}", error)),
     };
 
-    // simulation
-    //     .map(|sim| {
-    //         println!("{:#?}", sim);
-
-    //         if let Ok(res) = res {
-    //             println!("{:#?}", res);
-    //         }
-    //     })
-    //     .map_err(|err| {
-    //         println!("{}", err);
-    //     })
-	Ok(())
+    simulation
+        .map(|sim| {
+            println!("{:#?}", sim);
+        })
+        .map_err(|err| {
+            println!("{}", err);
+        })
 }
