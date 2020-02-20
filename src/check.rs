@@ -6,7 +6,7 @@ pub struct Output {
 	pub steps: Vec<String>
 }
 
-fn manage_resources<'a>(mut inventory: Inventory, process: &Process) -> Result <Inventory, &'a str> {
+pub fn manage_resources<'a>(mut inventory: Inventory, process: &Process) -> Result <Inventory, &'a str> {
 	for resource_needed in &process.input {
 		match inventory.get(&resource_needed.name) {
 			Some (n_items) => {
