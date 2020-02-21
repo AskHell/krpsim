@@ -6,6 +6,7 @@ use clap::{Arg, App};
 use krpsim::{
     parser::SimulationBuilderParser,
     ast::Simulation,
+	solver::Solver
 };
 
 fn parse(content: String) -> Result<Simulation, String> {
@@ -43,6 +44,17 @@ fn main() -> Result<(), ()> {
 
             file.read_to_string(&mut content).unwrap();
             parse(content)
+			.map(|simulation| {
+				let solver = Solver::new(0.01, 10, 100, 10);
+				match solver.solve(&simulation) {
+					Ok (best_path) => {
+						println!("{:?}", best_path);
+					}
+					Err (err) => {
+						println!("{}", err);
+					}
+				}
+			})
         },
         Err(error) => Err(format!("{}", error)),
     };
