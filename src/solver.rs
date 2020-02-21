@@ -18,31 +18,42 @@ pub struct Solver {
 	generation_size: usize,
 	iterations: usize,
 	weigths: Vec<usize>,
+	simulation: Simulation
 }
 
-// generate a n long fibonacci list
-fn fibonacci_n(n: usize) -> Vec<usize>{
-	(1..(n + 1)).fold(vec![], |mut acc, i| {
-		let to_append = if i < 3 {
+fn fibonacci_n(n: usize) -> Vec<usize> {
+    let (list, _) = (1..100).fold((vec![], 0), |(mut acc, total), i| {
+        if total > n {
+            return (acc, total)
+        }
+        let to_append = if i < 3 {
 			1
 		} else {
 		    let a = acc.get(i - 3).unwrap_or(&0);
 			let b = acc.get(i - 2).unwrap_or(&1);
 			a + b
 		};
-		acc.push(to_append);
-		acc
-	})
+		let new_total = total + to_append;
+		if new_total > n {
+			let mut padding = vec![1; n - total];
+			padding.append(&mut acc);
+			return (padding, new_total)
+		}
+        acc.push(to_append);
+        (acc, new_total)
+    });
+	list
 }
 
 impl Solver {
-	pub fn new(mutation_chance: f32, max_depth: usize, generation_size: usize, iterations: usize) -> Self {
+	pub fn new(mutation_chance: f32, max_depth: usize, generation_size: usize, iterations: usize, simulation: Simulation) -> Self {
 		let mut solver = Self {
 			mutation_chance,
 			max_depth,
 			generation_size,
 			iterations,
-			weigths: fibonacci_n(generation_size / 10)
+			simulation,
+			weigths: fibonacci_n(generation_size)
 		};
 		solver.weigths.reverse();
 		solver
@@ -70,29 +81,24 @@ impl Solver {
 	}
 
 	fn shuffle(&self, productions: Vec<Production>) -> Vec<Production> {
-    	let mut rng = thread_rng();
-		let mut shuffled_production: Vec<Production> = vec![];
-		// TODO: find a better way
-		for _ in 0..100 {
-			shuffled_production.push(vec![]);
-		}
-		for i in 0..productions[0].len() {
-			let steps: Vec<String> = productions.iter().map(|production| { production[i].clone() }).collect();
-			let mut shuffled_steps = steps.clone();
-			let mut new_steps: Vec<String> = vec![];
-			for _ in 0..9 {
-				shuffled_steps.shuffle(&mut rng);
-				new_steps.append(&mut shuffled_steps.clone());
-			}
-			for step in steps.into_iter() {
-				// TODO: add mutation chance here
-				new_steps.push(step);
-			}
-			for y in 0..new_steps.len() {
-				shuffled_production[y].push(new_steps[y].clone());
-			}
-		}
-		shuffled_production
+		let mut rng = rand::thread_rng();
+		productions.into_iter()
+		.zip(self.weigths.iter())
+		.fold(vec![], |mut acc, (production, weight)| {
+			let mut to_append: Vec<Production> = (0..*weight).map(|_| {
+				let i = rng.gen_range(0.0, 1.);
+				let new_production = if i <= self.mutation_chance {
+					println!("MUTATION!!");
+					self.generate_one(&self.simulation)
+				} else {
+					production.clone()
+				};
+				new_production
+			})
+			.collect();
+			acc.append(&mut to_append);
+			acc
+		})
 	}
 
 	fn get_available_steps(&self, inventory: &Inventory, simulation: &Simulation) -> Vec<(String, Inventory)> {
@@ -106,23 +112,26 @@ impl Solver {
 		.collect()
 	}
 
+	fn generate_one(&self, simulation: &Simulation) -> Production {
+		let mut production: Production = vec![];
+		let mut rng = rand::thread_rng();
+		let mut simulation_inventory = simulation.inventory.clone();
+		for _ in 0..self.max_depth {
+			let available_steps = self.get_available_steps(&simulation_inventory, &simulation);
+			if available_steps.is_empty() {
+				return production
+			}
+			let i = rng.gen_range(0, available_steps.len());
+			let (step_name, updated_inventory) = available_steps[i].clone();
+			production.push(step_name);
+			simulation_inventory = updated_inventory;
+		};
+		production
+	}
 	// First random generation, doable paths
 	fn generate(&self, simulation: &Simulation) -> Vec<Production> {
 		(0..self.generation_size).map(|_| {
-			let mut production: Production = vec![];
-			let mut rng = rand::thread_rng();
-			let mut simulation_inventory = simulation.inventory.clone();
-			for _ in 0..self.max_depth {
-				let available_steps = self.get_available_steps(&simulation_inventory, &simulation);
-				if available_steps.is_empty() {
-					return production
-				}
-				let i = rng.gen_range(0, available_steps.len());
-				let (step_name, updated_inventory) = available_steps[i].clone();
-				production.push(step_name);
-				simulation_inventory = updated_inventory;
-			}
-			production
+			self.generate_one(simulation)
 		})
 		.collect()
 	}

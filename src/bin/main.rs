@@ -45,7 +45,7 @@ fn main() -> Result<(), ()> {
             file.read_to_string(&mut content).unwrap();
             parse(content)
 			.map(|simulation| {
-				let solver = Solver::new(0.01, 10, 100, 10);
+				let solver = Solver::new(0.01, 10, 100, 10, simulation.clone());
 				match solver.solve(&simulation) {
 					Ok (best_path) => {
 						println!("{:?}", best_path);
