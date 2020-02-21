@@ -1,8 +1,8 @@
+extern crate serde;
 extern crate rand;
 
-use rand::seq::SliceRandom;
-use rand::thread_rng;
 use rand::Rng;
+use serde::{Deserialize, Serialize};
 
 use std::collections::HashMap;
 
@@ -12,13 +12,21 @@ use super::check::manage_resources;
 
 type Production = Vec<String>;
 
-pub struct Solver {
+#[derive(Serialize, Deserialize)]
+pub struct Config {
+	mutation_chance: f32,
+	max_depth: usize,
+	generation_size: usize,
+	iterations: usize,
+}
+
+struct Solver {
 	mutation_chance: f32,
 	max_depth: usize,
 	generation_size: usize,
 	iterations: usize,
 	weigths: Vec<usize>,
-	simulation: Simulation
+	simulation: Simulation,
 }
 
 fn fibonacci_n(n: usize) -> Vec<usize> {
@@ -45,35 +53,40 @@ fn fibonacci_n(n: usize) -> Vec<usize> {
 	list
 }
 
+pub fn solve(simulation: Simulation, config: Config) -> Result<Production, String> {
+	let solver = Solver::new(config, simulation.clone());
+	solver.solve()
+}
+
 impl Solver {
-	pub fn new(mutation_chance: f32, max_depth: usize, generation_size: usize, iterations: usize, simulation: Simulation) -> Self {
+	pub fn new(config: Config, simulation: Simulation) -> Self {
 		let mut solver = Self {
-			mutation_chance,
-			max_depth,
-			generation_size,
-			iterations,
+			mutation_chance: config.mutation_chance,
+			max_depth: config.max_depth,
+			generation_size: config.generation_size,
+			iterations: config.iterations,
 			simulation,
-			weigths: fibonacci_n(generation_size)
+			weigths: fibonacci_n(config.generation_size)
 		};
 		solver.weigths.reverse();
 		solver
 	}
 
-	pub fn solve(&self, simulation: &Simulation) -> Result<Production, String> {
+	pub fn solve(&self) -> Result<Production, String> {
 		let mut parents = vec![];
 		for i in 0..self.iterations {
 			let generation = if i == 0 {
-				self.generate(&simulation)
+				self.generate()
 			} else {
 				self.shuffle(parents)
 			};
-			parents = self.select(generation, &simulation);
+			parents = self.select(generation);
 		}
 		let best = parents.into_iter()
 			.max_by(|pa, pb| {
-				self.score(pa.clone(), &simulation)
+				self.score(pa.clone())
 				.cmp(
-					&self.score(pb.clone(), &simulation)
+					&self.score(pb.clone())
 				)
 			})
 			.unwrap_or(vec![]);
@@ -89,7 +102,7 @@ impl Solver {
 				let i = rng.gen_range(0.0, 1.);
 				let new_production = if i <= self.mutation_chance {
 					println!("MUTATION!!");
-					self.generate_one(&self.simulation)
+					self.generate_one()
 				} else {
 					production.clone()
 				};
@@ -101,8 +114,8 @@ impl Solver {
 		})
 	}
 
-	fn get_available_steps(&self, inventory: &Inventory, simulation: &Simulation) -> Vec<(String, Inventory)> {
-		simulation.processes.clone().into_iter().map(|(name, process)| {
+	fn get_available_steps(&self, inventory: &Inventory) -> Vec<(String, Inventory)> {
+		self.simulation.processes.clone().into_iter().map(|(name, process)| {
 			manage_resources(inventory.clone(), &process)
 			.map(|inventory| { (name, inventory) })
 		})
@@ -112,12 +125,12 @@ impl Solver {
 		.collect()
 	}
 
-	fn generate_one(&self, simulation: &Simulation) -> Production {
+	fn generate_one(&self) -> Production {
 		let mut production: Production = vec![];
 		let mut rng = rand::thread_rng();
-		let mut simulation_inventory = simulation.inventory.clone();
+		let mut simulation_inventory = self.simulation.inventory.clone();
 		for _ in 0..self.max_depth {
-			let available_steps = self.get_available_steps(&simulation_inventory, &simulation);
+			let available_steps = self.get_available_steps(&simulation_inventory);
 			if available_steps.is_empty() {
 				return production
 			}
@@ -129,20 +142,20 @@ impl Solver {
 		production
 	}
 	// First random generation, doable paths
-	fn generate(&self, simulation: &Simulation) -> Vec<Production> {
+	fn generate(&self) -> Vec<Production> {
 		(0..self.generation_size).map(|_| {
-			self.generate_one(simulation)
+			self.generate_one()
 		})
 		.collect()
 	}
 
 	// production can be returned trimed
-	fn simulate(&self, simulation: &Simulation, production: Production) -> (Inventory, usize, Production) {
-		let mut simulation_inventory = simulation.inventory.clone();
+	fn simulate(&self, production: Production) -> (Inventory, usize, Production) {
+		let mut simulation_inventory = self.simulation.inventory.clone();
 		let mut updated_production = vec![];
 		let mut i = 0;
 		for step in production {
-			match simulation.processes.get(&step) {
+			match self.simulation.processes.get(&step) {
 				Some (process) => {
 					match manage_resources(simulation_inventory.clone(), process) {
 						Ok (updated_inventory) => {
@@ -163,13 +176,13 @@ impl Solver {
 		(simulation_inventory, i, updated_production)
 	}
 
-	fn score(&self, production: Production, simulation: &Simulation) -> (usize, Production) {
-		let (inventory, n_steps, updated_production) = self.simulate(simulation, production);
-		let stock_score = simulation.optimize.iter().fold(0, |acc, key| {
+	fn score(&self, production: Production) -> (usize, Production) {
+		let (inventory, n_steps, updated_production) = self.simulate(production);
+		let stock_score = self.simulation.optimize.iter().fold(0, |acc, key| {
 			let resource_score = inventory.get(key).unwrap_or(&0);
 			acc + resource_score
 		});
-		if simulation.optimize_time {
+		if self.simulation.optimize_time {
 			return if stock_score >= n_steps {
 				(stock_score - n_steps, updated_production)
 			} else {
@@ -180,9 +193,9 @@ impl Solver {
 	}
 
 	// return best 10% of the population sorted
-	fn select(&self, productions: Vec<Production>, simulation: &Simulation) -> Vec<Production> {
+	fn select(&self, productions: Vec<Production>) -> Vec<Production> {
 		let mut p_scores: Vec<(usize, Production)> = productions.iter().map(|production| {
-			self.score(production.clone(), simulation)
+			self.score(production.clone())
 		})
 		.collect();
 		// DEBUG

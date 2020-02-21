@@ -6,7 +6,8 @@ use clap::{Arg, App};
 use krpsim::{
     parser::SimulationBuilderParser,
     ast::Simulation,
-	solver::Solver
+	solver::solve,
+	genetic_config_parser::parse_genetic_config,
 };
 
 fn parse(content: String) -> Result<Simulation, String> {
@@ -45,15 +46,17 @@ fn main() -> Result<(), ()> {
             file.read_to_string(&mut content).unwrap();
             parse(content)
 			.map(|simulation| {
-				let solver = Solver::new(0.01, 10, 100, 10, simulation.clone());
-				match solver.solve(&simulation) {
-					Ok (best_path) => {
-						println!("{:?}", best_path);
+				parse_genetic_config()
+				.map(|config| {
+					match solve(simulation, config) {
+						Ok (best_path) => {
+							println!("{:?}", best_path);
+						}
+						Err (err) => {
+							println!("{}", err);
+						}
 					}
-					Err (err) => {
-						println!("{}", err);
-					}
-				}
+				})
 			})
         },
         Err(error) => Err(format!("{}", error)),
