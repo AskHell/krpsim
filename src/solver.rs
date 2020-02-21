@@ -17,16 +17,35 @@ pub struct Solver {
 	max_depth: usize,
 	generation_size: usize,
 	iterations: usize,
+	weigths: Vec<usize>,
+}
+
+// generate a n long fibonacci list
+fn fibonacci_n(n: usize) -> Vec<usize>{
+	(1..(n + 1)).fold(vec![], |mut acc, i| {
+		let to_append = if i < 3 {
+			1
+		} else {
+		    let a = acc.get(i - 3).unwrap_or(&0);
+			let b = acc.get(i - 2).unwrap_or(&1);
+			a + b
+		};
+		acc.push(to_append);
+		acc
+	})
 }
 
 impl Solver {
 	pub fn new(mutation_chance: f32, max_depth: usize, generation_size: usize, iterations: usize) -> Self {
-		Self {
+		let mut solver = Self {
 			mutation_chance,
 			max_depth,
 			generation_size,
 			iterations,
-		}
+			weigths: fibonacci_n(generation_size / 10)
+		};
+		solver.weigths.reverse();
+		solver
 	}
 
 	pub fn solve(&self, simulation: &Simulation) -> Result<Production, String> {
@@ -50,7 +69,6 @@ impl Solver {
 		Ok(best)
 	}
 
-	// productions should all have equal lens here
 	fn shuffle(&self, productions: Vec<Production>) -> Vec<Production> {
     	let mut rng = thread_rng();
 		let mut shuffled_production: Vec<Production> = vec![];
@@ -152,7 +170,7 @@ impl Solver {
 		(stock_score, updated_production)
 	}
 
-	// Trim selected ones to the shortest
+	// return best 10% of the population sorted
 	fn select(&self, productions: Vec<Production>, simulation: &Simulation) -> Vec<Production> {
 		let mut p_scores: Vec<(usize, Production)> = productions.iter().map(|production| {
 			self.score(production.clone(), simulation)
@@ -163,13 +181,6 @@ impl Solver {
 		// - average size
 		p_scores.sort_by(|(score_a, _a), (score_b, _b)| { score_b.cmp(score_a) });
 		let best: Vec<Production> = p_scores.iter().take(self.generation_size / 10).map(|p_score| { p_score.clone().1 }).collect();
-		let shortest = best.iter().map(|a| { a.len() }).min().unwrap_or(0);
-		// DEBUG: shortest
-		best.into_iter().map(|a| {
-			if a.len() > shortest {
-				return a.into_iter().take(shortest).collect()
-			}
-			a
-		}).collect()
+		best
 	}
 }
