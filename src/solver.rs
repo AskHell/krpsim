@@ -31,8 +31,12 @@ impl Solver {
 
 	pub fn solve(&self, simulation: &Simulation) -> Result<Production, String> {
 		let mut parents = vec![];
-		for _ in 0..self.iterations {
-			let generation = self.generate(parents, &simulation);
+		for i in 0..self.iterations {
+			let generation = if i == 0 {
+				self.generate(&simulation)
+			} else {
+				self.shuffle(parents)
+			};
 			parents = self.select(generation, &simulation);
 		}
 		let best = parents.into_iter()
@@ -85,7 +89,7 @@ impl Solver {
 	}
 
 	// First random generation, doable paths
-	fn generate(&self, _parents: Vec<Production>, simulation: &Simulation) -> Vec<Production> {
+	fn generate(&self, simulation: &Simulation) -> Vec<Production> {
 		(0..self.generation_size).map(|_| {
 			let mut production: Production = vec![];
 			let mut rng = rand::thread_rng();
