@@ -1,8 +1,7 @@
 {
 
 	"mutation_chance": 0.01,
-	"max_depth": 10,
+	"max_depth": 100,
 	"generation_size": 100,
-	"iterations": 10
-
+	"iterations": 100
 }
