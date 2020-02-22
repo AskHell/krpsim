@@ -78,5 +78,4 @@ fn main() {
 			println!("{}", err);
 		}
 	};
-	println!("youhou");
 }

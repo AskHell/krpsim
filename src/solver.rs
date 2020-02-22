@@ -9,6 +9,7 @@ use std::collections::HashMap;
 use super::ast::{Simulation};
 use super::inventory::Inventory;
 use super::check::manage_resources;
+use super::genetic_plot::plot;
 
 type Production = Vec<String>;
 
@@ -20,6 +21,24 @@ pub struct Config {
 	iterations: usize,
 }
 
+#[derive(Clone)]
+pub struct Stats {
+	pub average_scores: Vec<usize>,
+}
+
+impl Stats {
+	pub fn new() -> Self {
+		Self {
+			average_scores: vec![],
+		}
+	}
+
+	pub fn update_scores(&mut self, generation_scores: Vec<usize>) {
+		let average_score = generation_scores.iter().sum::<usize>() / generation_scores.len();
+		self.average_scores.push(average_score);
+	}
+}
+
 struct Solver {
 	mutation_chance: f32,
 	max_depth: usize,
@@ -27,6 +46,7 @@ struct Solver {
 	iterations: usize,
 	weigths: Vec<usize>,
 	simulation: Simulation,
+	stats: Stats
 }
 
 fn fibonacci_n(n: usize) -> Vec<usize> {
@@ -54,8 +74,12 @@ fn fibonacci_n(n: usize) -> Vec<usize> {
 }
 
 pub fn solve(simulation: Simulation, config: Config) -> Result<Production, String> {
-	let solver = Solver::new(config, simulation.clone());
+	let mut solver = Solver::new(config, simulation.clone());
 	solver.solve()
+	.map(|(production, stats)| {
+		plot(stats);
+		production
+	})
 }
 
 impl Solver {
@@ -66,13 +90,14 @@ impl Solver {
 			generation_size: config.generation_size,
 			iterations: config.iterations,
 			simulation,
-			weigths: fibonacci_n(config.generation_size)
+			weigths: fibonacci_n(config.generation_size),
+			stats: Stats::new(),
 		};
 		solver.weigths.reverse();
 		solver
 	}
 
-	pub fn solve(&self) -> Result<Production, String> {
+	pub fn solve(&mut self) -> Result<(Production, Stats), String> {
 		let mut parents = vec![];
 		for i in 0..self.iterations {
 			let generation = if i == 0 {
@@ -90,7 +115,7 @@ impl Solver {
 				)
 			})
 			.unwrap_or(vec![]);
-		Ok(best)
+		Ok((best, self.stats.clone()))
 	}
 
 	fn shuffle(&self, productions: Vec<Production>) -> Vec<Production> {
@@ -173,27 +198,29 @@ impl Solver {
 				}
 			}
 		}
+		println!("{:?}", simulation_inventory);
 		(simulation_inventory, i, updated_production)
 	}
 
+	// TODO: take time into account
 	fn score(&self, production: Production) -> (usize, Production) {
-		let (inventory, n_steps, updated_production) = self.simulate(production);
+		let (inventory, _n_steps, updated_production) = self.simulate(production);
 		let stock_score = self.simulation.optimize.iter().fold(0, |acc, key| {
 			let resource_score = inventory.get(key).unwrap_or(&0);
 			acc + resource_score
 		});
-		if self.simulation.optimize_time {
-			return if stock_score >= n_steps {
-				(stock_score - n_steps, updated_production)
-			} else {
-				(0, updated_production)
-			}
-		}
+		// if self.simulation.optimize_time {
+		// 	return if stock_score >= n_steps {
+		// 		(stock_score - n_steps, updated_production)
+		// 	} else {
+		// 		(0, updated_production)
+		// 	}
+		// }
 		(stock_score, updated_production)
 	}
 
 	// return best 10% of the population sorted
-	fn select(&self, productions: Vec<Production>) -> Vec<Production> {
+	fn select(&mut self, productions: Vec<Production>) -> Vec<Production> {
 		let mut p_scores: Vec<(usize, Production)> = productions.iter().map(|production| {
 			self.score(production.clone())
 		})
@@ -201,6 +228,7 @@ impl Solver {
 		// DEBUG
 		// - average score
 		// - average size
+		self.stats.update_scores(p_scores.iter().map(|p_score| { p_score.0 }).collect());
 		p_scores.sort_by(|(score_a, _a), (score_b, _b)| { score_b.cmp(score_a) });
 		let best: Vec<Production> = p_scores.iter().take(self.generation_size / 10).map(|p_score| { p_score.clone().1 }).collect();
 		best
