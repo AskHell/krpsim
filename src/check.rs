@@ -8,7 +8,7 @@ pub struct Output {
 
 pub fn manage_resources<'a>(mut inventory: Inventory, process: &Process) -> Result <Inventory, &'a str> {
 	for resource_needed in &process.input {
-		match inventory.get(&resource_needed.name) {
+		match inventory.clone().get(&resource_needed.name) {
 			Some (n_items) => {
 				if n_items < &resource_needed.quantity {
 					return Err ("Not enough available resources.")
@@ -21,7 +21,7 @@ pub fn manage_resources<'a>(mut inventory: Inventory, process: &Process) -> Resu
 		}
 	}
 	for resource_created in &process.output {
-		match inventory.get(&resource_created.name) {
+		match inventory.clone().get(&resource_created.name) {
 			Some (n_items) => {
 				inventory.insert(resource_created.name.clone(), *n_items + resource_created.quantity);
 			}
