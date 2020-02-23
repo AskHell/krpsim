@@ -166,6 +166,7 @@ impl GeneticSolver {
 		};
 		production
 	}
+	
 	// First random generation, doable paths
 	fn generate(&self) -> Vec<Production> {
 		(0..self.generation_size).map(|_| {
@@ -174,36 +175,22 @@ impl GeneticSolver {
 		.collect()
 	}
 
-	// production can be returned trimed
-	fn simulate(&self, production: Production) -> (Inventory, usize, Production) {
-		let mut simulation_inventory = self.simulation.inventory.clone();
-		let mut updated_production = vec![];
-		let mut i = 0;
-		for step in production {
-			match self.simulation.processes.get(&step) {
-				Some (process) => {
-					match manage_resources(simulation_inventory.clone(), process) {
-						Ok (updated_inventory) => {
-							simulation_inventory = updated_inventory;
-							updated_production.push(step);
-							i += 1;
-						}
-						Err (_err) => {
-							return (simulation_inventory, i, updated_production)
-						}
-					}
-				}
-				None => {
-					return (simulation_inventory, i, updated_production)
-				}
-			}
-		}
-		(simulation_inventory, i, updated_production)
+	fn simulate(&self, production: &Production) -> (Inventory, usize) {
+		let simulation_inventory = self.simulation.inventory.clone();
+		let initial_acc = (simulation_inventory, 0);
+		production
+			.iter()
+			.fold(initial_acc, |(inventory, n_steps), process_name| {
+				let process = self.simulation.processes.get(process_name).unwrap();
+				let new_inventory = manage_resources(inventory, process).unwrap();
+				println!("{:?}", new_inventory);
+				(new_inventory, n_steps + 1)
+			})
 	}
 
 	// TODO: take time into account
 	fn score(&self, production: Production) -> (usize, Production) {
-		let (inventory, _n_steps, updated_production) = self.simulate(production);
+		let (inventory, _n_steps) = self.simulate(&production);
 		let stock_score = self.simulation.optimize.iter().fold(0, |acc, key| {
 			let resource_score = inventory.get(key).unwrap_or(&0);
 			acc + resource_score
@@ -215,7 +202,7 @@ impl GeneticSolver {
 		// 		(0, updated_production)
 		// 	}
 		// }
-		(stock_score, updated_production)
+		(stock_score, production)
 	}
 
 	// return best 10% of the population sorted
