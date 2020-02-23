@@ -11,7 +11,7 @@ use super::inventory::Inventory;
 use super::check::manage_resources;
 use super::genetic_plot::plot;
 
-type Production = Vec<String>;
+pub type Production = Vec<String>;
 
 #[derive(Serialize, Deserialize)]
 pub struct Config {
