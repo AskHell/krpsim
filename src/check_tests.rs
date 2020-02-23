@@ -17,7 +17,6 @@ fn happy_path() {
 		input: vec!(Resource {name: String::from("wood"), quantity: 3}),
 		output: vec!(Resource {name: String::from("premium_chair"), quantity: 1}),
 		duration: 40,
-		h: 0
 	};
 
 	let build_standard_process = Process {
@@ -25,7 +24,6 @@ fn happy_path() {
 		input: vec!(Resource {name: String::from("wood"), quantity: 3}),
 		output: vec!(Resource {name: String::from("standard_chair"), quantity: 1}),
 		duration: 10,
-		h: 0
 	};
 
 	let mut processes = HashMap::new();

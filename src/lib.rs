@@ -11,3 +11,5 @@ pub mod utils;
 #[cfg(test)]
 mod check_tests;
 
+#[cfg(test)]
+#[macro_use] extern crate maplit;
