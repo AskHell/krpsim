@@ -73,7 +73,7 @@ fn fibonacci_n(n: usize) -> Vec<usize> {
 	list
 }
 
-pub fn solve(simulation: Simulation, config: Config) -> Result<Production, String> {
+pub fn solve<'a>(simulation: Simulation, config: Config) -> Result<Production, &'a str> {
 	let mut solver = Solver::new(config, simulation.clone());
 	solver.solve()
 	.map(|(production, stats)| {
@@ -97,7 +97,7 @@ impl Solver {
 		solver
 	}
 
-	pub fn solve(&mut self) -> Result<(Production, Stats), String> {
+	pub fn solve<'a>(&mut self) -> Result<(Production, Stats), &'a str> {
 		let mut parents = vec![];
 		for i in 0..self.iterations {
 			let generation = if i == 0 {
