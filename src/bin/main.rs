@@ -10,6 +10,11 @@ use krpsim::{
 	genetic_config_parser::parse_genetic_config,
 };
 
+enum Algorithm {
+	Genetic,
+	Simplex
+}
+
 fn parse<'a>(content: String) -> Result<Simulation, &'a str> {
     SimulationBuilderParser::new()
         .parse(&content)
@@ -39,15 +44,20 @@ fn parse_args<'a>() -> Result<(String, usize), &'a str> {
         .parse()
         .unwrap_or(0);
 
-    matches
+    let file_path = matches
         .value_of("FILE")
-        .ok_or("Unable to open configuration file")
-		.map(|file_path| (file_path.to_string(), delay))
+        .ok_or("Unable to open configuration file")?;
+	
+	Ok((file_path.to_string(), delay))
+}
+
+// TODO: unmock
+fn get_algorithm(_simulation: &Simulation) -> Algorithm {
+	Algorithm::Genetic
 }
 
 // Handle file openings (simulation description and genetic config)
 fn io(file: &str) -> IoResult<(File, File)> {
-	
 	let simulation_file = File::open(file)?;
 	let genetic_config_file = File::open("generic_config.json")?;
 	Ok((simulation_file, genetic_config_file))
@@ -63,17 +73,21 @@ fn main() {
 	})
 	.and_then(|(mut simulation_file, mut genetic_config_file)| {
 		// TODO: Check for algorithm to choose (only genetic available now)
-		let mut genetic_config_content = String::new();
 		let mut simulation_content = String::new();
-		genetic_config_file.read_to_string(&mut genetic_config_content).unwrap();
 		simulation_file.read_to_string(&mut simulation_content).unwrap();
-		parse(simulation_content)
-			.and_then(|simulation| {
-				parse_genetic_config(genetic_config_content)
-				.map(|genetic_config| (genetic_config, simulation))
-			})
-	})
-	.and_then(|(genetic_config, simulation)| solve(simulation, genetic_config));
+		let simulation = parse(simulation_content)?;
+		let algorithm = get_algorithm(&simulation);
+		let solve = match algorithm {
+			Algorithm::Genetic => {
+				let mut genetic_config_content = String::new();
+				genetic_config_file.read_to_string(&mut genetic_config_content).unwrap();
+				let genetic_config = parse_genetic_config(genetic_config_content)?;
+				solve(simulation, genetic_config)
+			},
+			Algorithm::Simplex => Err ("Simplex not implemented yet")
+		};
+		solve
+	});
 	
 	match result {
 		Err (err) => println!("An error occurred: {:?}", err),
