@@ -25,18 +25,23 @@ pub struct Config {
 #[derive(Clone)]
 pub struct Stats {
 	pub average_scores: Vec<usize>,
+	pub best_scores: Vec<usize>,
 }
 
 impl Stats {
 	pub fn new() -> Self {
 		Self {
 			average_scores: vec![],
+			best_scores: vec![],
 		}
 	}
 
+	// Arguments: sorted scores
 	pub fn update_scores(&mut self, generation_scores: Vec<usize>) {
 		let average_score = generation_scores.iter().sum::<usize>() / generation_scores.len();
+		let best_generation_score = generation_scores.get(0).unwrap_or(&0);
 		self.average_scores.push(average_score);
+		self.best_scores.push(*best_generation_score);
 	}
 }
 
@@ -214,8 +219,8 @@ impl GeneticSolver {
 		// DEBUG
 		// - average score
 		// - average size
-		self.stats.update_scores(p_scores.iter().map(|p_score| { p_score.0 }).collect());
 		p_scores.sort_by(|(score_a, _a), (score_b, _b)| { score_b.cmp(score_a) });
+		self.stats.update_scores(p_scores.iter().map(|p_score| { p_score.0 }).collect());
 		let best: Vec<Production> = p_scores.iter().take(self.generation_size / 10).map(|p_score| { p_score.clone().1 }).collect();
 		best
 	}
