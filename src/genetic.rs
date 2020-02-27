@@ -182,8 +182,8 @@ impl GeneticSolver {
 			.iter()
 			.fold(initial_acc, |(inventory, n_steps), process_name| {
 				let process = self.simulation.processes.get(process_name).unwrap();
-				let new_inventory = manage_resources(inventory, process).unwrap();
-				println!("{:?}", new_inventory);
+				let new_inventory = manage_resources(inventory, &process).unwrap();
+				// println!("{:?}", new_inventory);
 				(new_inventory, n_steps + 1)
 			})
 	}

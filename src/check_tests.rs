@@ -1,10 +1,8 @@
 use std::collections::HashMap;
 
-use crate::ast::Process;
-use crate::ast::Simulation;
-use crate::ast::Resource;
-use crate::check::check;
-use crate::check::Output;
+use crate::ast::{Process, Simulation, Resource};
+use crate::check::{check, Output, manage_resources};
+use crate::inventory::Inventory;
 
 #[test]
 fn happy_path() {
@@ -52,4 +50,27 @@ fn happy_path() {
 	let expected = Ok(expected_inventory);
 
 	assert_eq!(check(mock_simulation, mock_output), expected);
+}
+
+#[test]
+fn test_manage_resources() {
+
+	let mut inventory = HashMap::new();
+	inventory.insert(String::from("wood"), 10);
+
+	let mut expected_inventory = HashMap::new();
+	expected_inventory.insert("wood".to_string(), 7);
+	expected_inventory.insert("premium_chair".to_string(), 1);
+	let expected: Result<Inventory, &str> = Ok(expected_inventory);
+
+	let build_premium_process = Process {
+		name: String::from("build_premium"),
+		input: vec!(Resource {name: String::from("wood"), quantity: 3}),
+		output: vec!(Resource {name: String::from("premium_chair"), quantity: 1}),
+		duration: 40,
+	};
+
+	let result = manage_resources(inventory, &build_premium_process);
+	assert_eq!(result, expected);
+
 }

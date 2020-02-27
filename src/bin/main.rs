@@ -51,6 +51,7 @@ fn krpsim() -> Result<Production, String> {
 	let mut simulation_content = String::new();
 	simulation_file.read_to_string(&mut simulation_content).unwrap();
 	let simulation = parse(simulation_content)?;
+	println!("{:?}", simulation.processes);
 	solve(simulation)
 }
 

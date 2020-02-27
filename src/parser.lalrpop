@@ -5,11 +5,8 @@ use crate::{
     ast::{
         ProcessBuilder,
         SimulationBuilder,
+		Resource
     },
-    inventory::{
-        Inventory,
-        convert
-    }
 };
 
 grammar;
@@ -47,19 +44,19 @@ Optimize: (Vec<String>, bool) = {
 // name:(input1:0;input2:1;...):(output1:1;output2:4):time
 ProcessBuilder: ProcessBuilder = {
     <n:Name> CompleteBy <i:AssociativeList?> CompleteBy <o:AssociativeList?> CompleteBy <d:Num> => {
-        let i = i.unwrap_or(HashMap::new());
-        let o = o.unwrap_or(HashMap::new());
-        ProcessBuilder::new(n, vec![], vec![], d)
+        let i = i.unwrap_or(vec![]).into_iter().map(|(name, quantity)| { Resource { name, quantity }}).collect();
+        let o = o.unwrap_or(vec![]).into_iter().map(|(name, quantity)| { Resource { name, quantity }}).collect();
+        ProcessBuilder::new(n, i, o, d)
     }
 };
 
 // (name:0;name1:1;...)
-AssociativeList: Inventory = {
+AssociativeList: Vec<(String, usize)> = {
     Open <l:(<Associative> Separate)*> <e:Associative?> Close => {
         let mut vec = l;
 
         if let Some(e) = e { vec.push(e); }
-        convert(vec)
+		vec
     }
 };
 
