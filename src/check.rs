@@ -41,7 +41,7 @@ pub fn produce_resources<'a>(output: &Vec<Resource>, inventory: Inventory) -> Re
 
 pub fn manage_resources<'a>(inventory: Inventory, process: &Process) -> Result <Inventory, &'a str> {
 	consume_resources(&process.input, inventory)
-		.map(|consumed_inventory| produce_resources(&process.output, consumed_inventory))?
+		.and_then(|consumed_inventory| produce_resources(&process.output, consumed_inventory))
 }
 
 pub fn check<'a>(simulation: Simulation, output: Output) -> Result <Inventory, &'a str> {
