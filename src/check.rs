@@ -1,5 +1,3 @@
-use itertools::Itertools;
-
 use super::inventory::Inventory;
 use super::ast::Process;
 use super::ast::Simulation;
@@ -8,41 +6,22 @@ pub struct Output {
 	pub steps: Vec<String>
 }
 
+// TODO: early exit (maybe using foldWhile?)
 pub fn manage_resources<'a>(inventory: Inventory, process: &Process) -> Result <Inventory, &'a str> {
-	let original_acc = inventory.clone();
+	let original_acc = Ok (inventory.clone());
 	process.input
 		.iter()
-		.map(Ok::<_, ()>)
-		.fold_results(original_acc, |mut acc, resource| {
-			let n_items = acc.get(&resource.name)?;
-			acc.insert(resource.name.clone(), n_items - resource.quantity);
-			Ok(acc)
-		});
-	Ok (inventory)
-	// for resource_needed in &process.input {
-	// 	match inventory.clone().get(&resource_needed.name) {
-	// 		Some (n_items) => {
-	// 			if n_items < &resource_needed.quantity {
-	// 				return Err ("Not enough available resources.")
-	// 			}
-	// 			inventory.insert(resource_needed.name.clone(), *n_items - resource_needed.quantity);
-	// 		}
-	// 		None => {
-	// 			return Err ("Unexisting resource.")
-	// 		}
-	// 	}
-	// }
-	// for resource_created in &process.output {
-	// 	match inventory.clone().get(&resource_created.name) {
-	// 		Some (n_items) => {
-	// 			inventory.insert(resource_created.name.clone(), *n_items + resource_created.quantity);
-	// 		}
-	// 		None => {
-	// 			inventory.insert(resource_created.name.clone(), resource_created.quantity);
-	// 		}
-	// 	}
-	// }
-	// Ok (inventory)
+		.fold(original_acc, |acc_res: Result<Inventory, &'a str>, resource| {
+			match acc_res {
+				Ok (acc) => {
+					let n_items = acc.get(&resource.name).ok_or("Unable to find resource in inventory")?;
+					let mut new_acc = acc.clone();
+					new_acc.insert(resource.name.clone(), *n_items - resource.quantity);
+					Ok(acc)
+				}
+				err => err
+			}
+		})
 }
 
 pub fn check<'a>(simulation: Simulation, output: Output) -> Result <Inventory, &'a str> {
