@@ -14,8 +14,12 @@ pub fn consume_resources<'a>(input: &Vec<Resource>, inventory: Inventory) -> Res
 				Ok (acc) => {
 					let n_items = acc.get(&resource.name).ok_or("Unable to find resource in inventory")?;
 					let mut new_acc = acc.clone();
-					new_acc.insert(resource.name.clone(), *n_items - resource.quantity);
-					Ok(new_acc)
+					if *n_items < resource.quantity {
+						Err("Not enough available resources")
+					} else {
+						new_acc.insert(resource.name.clone(), *n_items - resource.quantity);
+						Ok(new_acc)
+					}
 				}
 				err => err
 			}
