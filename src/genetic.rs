@@ -3,16 +3,19 @@ extern crate rand;
 
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-
 use std::collections::HashMap;
+use std::cmp::max;
 
 use crate::{
-	ast::Simulation,
+	ast::{Simulation, Process},
 	inventory::Inventory,
-	check::manage_resources,
+	check::{manage_resources, consume_resources},
 	genetic_plot::plot,
 	solver::Production,
 };
+
+type Duration = usize;
+type Batch = (Duration, Vec<String>);
 
 #[derive(Serialize, Deserialize)]
 pub struct Config {
@@ -223,5 +226,32 @@ impl GeneticSolver {
 		self.stats.update_scores(p_scores.iter().map(|p_score| { p_score.0 }).collect());
 		let best: Vec<Production> = p_scores.iter().take(self.generation_size / 10).map(|p_score| { p_score.clone().1 }).collect();
 		best
+	}
+
+	fn batchify(&self, process_names: Vec<String>) -> Vec<Batch> {
+		let mut processes: Vec<Process> = process_names.into_iter().map(|process_name| {
+			self.simulation.processes.get(&process_name).unwrap().clone() // TODO: protect!
+		}).collect();
+		let mut batched_processes = vec![];
+		let mut current_batch = (0, vec![]);
+		let mut start_stock = self.simulation.inventory.clone();
+		let mut batch_stock = self.simulation.inventory.clone();
+		for process in processes {
+			match consume_resources(&process.input, batch_stock.clone()) {
+				Ok (updated_stock) => {
+					batch_stock = updated_stock;
+					let (duration, batch_processes) = current_batch.clone();
+					let new_duration = max(duration, process.duration);
+					let new_batch_processes = [&batch_processes[..], &[process.name.clone()]].concat();
+					current_batch = (new_duration, new_batch_processes);
+				}
+				Err (_) => {
+					batched_processes.push(current_batch.clone());
+					batch_stock = current_batch.1.iter().fold(HashMap::new())
+					current_batch = (process.duration, vec![process.name.clone()]);
+				}
+			}
+		}
+		batched_processes
 	}
 }

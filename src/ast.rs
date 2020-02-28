@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+
 use super::inventory::{Inventory};
 
 #[derive(Debug, Clone)]
@@ -22,8 +23,8 @@ impl ProcessBuilder {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Resource {
-        pub name: String,
-        pub quantity: usize,
+	pub name: String,
+	pub quantity: usize,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
