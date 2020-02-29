@@ -65,7 +65,8 @@ pub fn batchify(simulation: &Simulation, process_names: Path) -> Production {
 					.map(|batch_process_name| { simulation.processes.get(batch_process_name).unwrap().clone() }) // TODO: protect
 					.fold(start_stock.clone(), |acc, process| { 
 						produce_resources(&process.output, acc).unwrap() // TODO: protect
-					})
+					});
+				current_batch = (0, vec![]);
 			}
 		}
 	}
