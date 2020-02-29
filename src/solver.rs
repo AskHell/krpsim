@@ -1,11 +1,13 @@
 use std::fs::File;
 use std::io::Read;
+use std::cmp::max;
 
 use crate::{
 	genetic::solve as genetic_solve,
-	ast::Simulation,
+	ast::{Simulation, Process},
 	genetic_config_parser::parse_genetic_config,
 	utils::generalize_error,
+	check::{consume_resources, produce_resources}
 };
 
 pub enum Algorithm {
@@ -35,4 +37,38 @@ pub fn solve(simulation: Simulation) -> Result<Production, String> {
 			genetic_solve(simulation, genetic_config).map_err(generalize_error)
 		}
 	}
+}
+
+
+
+pub fn batchify(simulation: &Simulation, process_names: Path) -> Production {
+	let processes: Vec<Process> = process_names.into_iter().map(|process_name| {
+		simulation.processes.get(&process_name).unwrap().clone() // TODO: protect!
+	}).collect();
+	let mut batched_processes = vec![];
+	let mut current_batch = (0, vec![]);
+	let start_stock = simulation.inventory.clone();
+	let mut batch_stock = simulation.inventory.clone();
+	for process in processes {
+		match consume_resources(&process.input, batch_stock.clone()).ok() {
+			Some (updated_stock) => {
+				batch_stock = updated_stock;
+				let (duration, batch_processes) = current_batch.clone();
+				let new_duration = max(duration, process.duration);
+				let new_batch_processes = [&batch_processes[..], &[process.name.clone()]].concat();
+				current_batch = (new_duration, new_batch_processes);
+			}
+			None => {
+				batched_processes.push(current_batch.clone());
+				batch_stock = current_batch.1
+					.iter()
+					.map(|batch_process_name| { simulation.processes.get(batch_process_name).unwrap().clone() }) // TODO: protect
+					.fold(start_stock.clone(), |acc, process| { 
+						produce_resources(&process.output, acc).unwrap() // TODO: protect
+					})
+			}
+		}
+	}
+	batched_processes.push(current_batch);
+	batched_processes
 }

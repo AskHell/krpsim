@@ -4,17 +4,15 @@ extern crate rand;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::cmp::max;
 
 use crate::{
-	ast::{Simulation, Process},
+	ast::{Simulation},
 	inventory::Inventory,
-	check::{manage_resources, consume_resources, produce_resources},
+	check::{manage_resources},
 	genetic_plot::plot,
-	solver::{Production, Path, Duration},
+	score::{Score, score},
+	solver::{Production, Path, batchify},
 };
-
-type Score = usize;
 
 #[derive(Serialize, Deserialize)]
 pub struct Config {
@@ -22,12 +20,13 @@ pub struct Config {
 	max_depth: usize,
 	generation_size: usize,
 	iterations: usize,
+	time_weight: f32,
 }
 
 #[derive(Clone)]
 pub struct Stats {
-	pub average_scores: Vec<usize>,
-	pub best_scores: Vec<usize>,
+	pub average_scores: Vec<Score>,
+	pub best_scores: Vec<Score>,
 }
 
 impl Stats {
@@ -39,8 +38,8 @@ impl Stats {
 	}
 
 	// Arguments: sorted scores
-	pub fn update_scores(&mut self, generation_scores: Vec<usize>) {
-		let average_score = generation_scores.iter().sum::<usize>() / generation_scores.len();
+	pub fn update_scores(&mut self, generation_scores: Vec<Score>) {
+		let average_score = generation_scores.iter().sum::<Score>() / generation_scores.len() as Score;
 		let best_generation_score = generation_scores.get(0).unwrap_or(&0);
 		self.average_scores.push(average_score);
 		self.best_scores.push(*best_generation_score);
@@ -54,7 +53,8 @@ struct GeneticSolver {
 	iterations: usize,
 	weigths: Vec<usize>,
 	simulation: Simulation,
-	stats: Stats
+	time_weight: f32,
+	stats: Stats,
 }
 
 fn fibonacci_n(n: usize) -> Vec<usize> {
@@ -97,6 +97,7 @@ impl GeneticSolver {
 			max_depth: config.max_depth,
 			generation_size: config.generation_size,
 			iterations: config.iterations,
+			time_weight: config.time_weight,
 			simulation,
 			weigths: fibonacci_n(config.generation_size),
 			stats: Stats::new(),
@@ -117,13 +118,12 @@ impl GeneticSolver {
 		}
 		let best_path = parents.into_iter()
 			.max_by(|pa, pb| {
-				self.score(pa.clone())
-				.cmp(
-					&self.score(pb.clone())
-				)
+				let (score_a, _) = score(&self.simulation, pa.clone(), self.time_weight);
+				let (score_b, _) = score(&self.simulation, pb.clone(), self.time_weight);
+				score_a.cmp(&score_b)
 			})
 			.unwrap_or(vec![]);
-		let best_production = self.batchify(best_path);
+		let best_production = batchify(&self.simulation, best_path);
 		Ok((best_production, self.stats.clone()))
 	}
 
@@ -167,7 +167,7 @@ impl GeneticSolver {
 		let mut production: Path = vec![];
 		let mut rng = rand::thread_rng();
 		let mut simulation_inventory = self.simulation.inventory.clone();
-		for _ in 0..self.max_depth {
+		for _ in 0..len {
 			let available_steps = self.get_available_steps(&simulation_inventory);
 			if available_steps.is_empty() {
 				return production
@@ -188,77 +188,15 @@ impl GeneticSolver {
 		.collect()
 	}
 
-	fn simulate_steps(&self, steps: &Path, stock: Inventory) -> Inventory {
-		steps.iter().map(|process_name| {
-			self.simulation.processes.get(process_name).unwrap().clone() // TODO: protect
-		})
-		.fold(stock.clone(), |acc, process| {
-			manage_resources(acc, &process).unwrap() // TODO: protect
-		})
-	}
-
-	fn simulate(&self, production: &Production) -> (Inventory, Duration) {
-		let simulation_inventory = self.simulation.inventory.clone();
-		let initial_acc = (simulation_inventory, 0);
-		production
-			.iter()
-			.fold(initial_acc, |(stock, duration), (step_duration, step_processes)| {
-				let new_stock = self.simulate_steps(&step_processes, stock);
-				(new_stock.clone(), duration + step_duration)
-			})
-	}
-
-	// TODO: take time into account
-	fn score(&self, steps: Path) -> (usize, Path) {
-		let production = self.batchify(steps.clone());
-		let (inventory, _duration) = self.simulate(&production);
-		let stock_score = self.simulation.optimize.iter().fold(0, |acc, key| {
-			let resource_score = inventory.get(key).unwrap_or(&0);
-			acc + resource_score
-		});
-		(stock_score, steps)
-	}
-
 	// return top 10% of the population, sorted
 	fn select(&mut self, paths: Vec<Path>) -> Vec<Path> {
-		let mut p_scores: Vec<(usize, Path)> = paths.iter().map(|path| {
-			self.score(path.clone())
+		let mut p_scores: Vec<(Score, Path)> = paths.iter().map(|path| {
+			score(&self.simulation, path.clone(), self.time_weight)
 		})
 		.collect();
 		p_scores.sort_by(|(score_a, _a), (score_b, _b)| { score_b.cmp(score_a) });
 		self.stats.update_scores(p_scores.iter().map(|p_score| { p_score.0 }).collect());
 		let best: Vec<Path> = p_scores.iter().take(self.generation_size / 10).map(|p_score| { p_score.clone().1 }).collect();
 		best
-	}
-
-	fn batchify(&self, process_names: Path) -> Production {
-		let processes: Vec<Process> = process_names.into_iter().map(|process_name| {
-			self.simulation.processes.get(&process_name).unwrap().clone() // TODO: protect!
-		}).collect();
-		let mut batched_processes = vec![];
-		let mut current_batch = (0, vec![]);
-		let start_stock = self.simulation.inventory.clone();
-		let mut batch_stock = self.simulation.inventory.clone();
-		for process in processes {
-			match consume_resources(&process.input, batch_stock.clone()).ok() {
-				Some (updated_stock) => {
-					batch_stock = updated_stock;
-					let (duration, batch_processes) = current_batch.clone();
-					let new_duration = max(duration, process.duration);
-					let new_batch_processes = [&batch_processes[..], &[process.name.clone()]].concat();
-					current_batch = (new_duration, new_batch_processes);
-				}
-				None => {
-					batched_processes.push(current_batch.clone());
-					batch_stock = current_batch.1
-						.iter()
-						.map(|batch_process_name| { self.simulation.processes.get(batch_process_name).unwrap().clone() }) // TODO: protect
-						.fold(start_stock.clone(), |acc, process| { 
-							produce_resources(&process.output, acc).unwrap() // TODO: protect
-						})
-				}
-			}
-		}
-		batched_processes
 	}
 }
