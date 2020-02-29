@@ -13,8 +13,9 @@ pub enum Algorithm {
 }
 
 pub type Duration = usize;
-pub type Steps = Vec<String>;
-type Batch = (Duration, Steps);
+pub type Step = String;
+pub type Path = Vec<Step>;
+type Batch = (Duration, Path);
 pub type Production = Vec<Batch>;
 
 // TODO: unmock

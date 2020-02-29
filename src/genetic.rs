@@ -11,8 +11,10 @@ use crate::{
 	inventory::Inventory,
 	check::{manage_resources, consume_resources, produce_resources},
 	genetic_plot::plot,
-	solver::{Production, Steps, Duration},
+	solver::{Production, Path, Duration},
 };
+
+type Score = usize;
 
 #[derive(Serialize, Deserialize)]
 pub struct Config {
@@ -104,7 +106,7 @@ impl GeneticSolver {
 	}
 
 	pub fn solve<'a>(&mut self) -> Result<(Production, Stats), &'a str> {
-		let mut parents = vec![];
+		let mut parents: Vec<Path> = vec![];
 		for i in 0..self.iterations {
 			let generation = if i == 0 {
 				self.generate()
@@ -113,7 +115,7 @@ impl GeneticSolver {
 			};
 			parents = self.select(generation);
 		}
-		let best = parents.into_iter()
+		let best_path = parents.into_iter()
 			.max_by(|pa, pb| {
 				self.score(pa.clone())
 				.cmp(
@@ -121,27 +123,12 @@ impl GeneticSolver {
 				)
 			})
 			.unwrap_or(vec![]);
-		Ok((best, self.stats.clone()))
+		let best_production = self.batchify(best_path);
+		Ok((best_production, self.stats.clone()))
 	}
 
-	fn shuffle(&self, productions: Vec<Production>) -> Vec<Production> {
-		let mut rng = rand::thread_rng();
-		productions.into_iter()
-		.zip(self.weigths.iter())
-		.fold(vec![], |mut acc, (production, weight)| {
-			let mut to_append: Vec<Production> = (0..*weight).map(|_| {
-				let i = rng.gen_range(0.0, 1.);
-				let new_production = if i <= self.mutation_chance {
-					self.generate_one()
-				} else {
-					production.clone()
-				};
-				new_production
-			})
-			.collect();
-			acc.append(&mut to_append);
-			acc
-		})
+	fn shuffle(&self, steps: Vec<Path>) -> Vec<Path> {
+		unimplemented!()
 	}
 
 	fn get_available_steps(&self, inventory: &Inventory) -> Vec<(String, Inventory)> {
@@ -155,8 +142,8 @@ impl GeneticSolver {
 		.collect()
 	}
 
-	fn generate_one(&self) -> Steps {
-		let mut production: Steps = vec![];
+	fn generate_one(&self) -> Path {
+		let mut production: Path = vec![];
 		let mut rng = rand::thread_rng();
 		let mut simulation_inventory = self.simulation.inventory.clone();
 		for _ in 0..self.max_depth {
@@ -173,14 +160,14 @@ impl GeneticSolver {
 	}
 	
 	// First random generation, doable paths
-	fn generate(&self) -> Vec<Steps> {
+	fn generate(&self) -> Vec<Path> {
 		(0..self.generation_size).map(|_| {
 			self.generate_one()
 		})
 		.collect()
 	}
 
-	fn simulate_steps(&self, steps: &Steps, stock: Inventory) -> Inventory {
+	fn simulate_steps(&self, steps: &Path, stock: Inventory) -> Inventory {
 		steps.iter().map(|process_name| {
 			self.simulation.processes.get(process_name).unwrap().clone() // TODO: protect
 		})
@@ -201,35 +188,29 @@ impl GeneticSolver {
 	}
 
 	// TODO: take time into account
-	fn score(&self, production: Production) -> (usize, Production) {
-		let (inventory, _n_steps) = self.simulate(&production);
+	fn score(&self, steps: Path) -> (usize, Path) {
+		let production = self.batchify(steps.clone());
+		let (inventory, _duration) = self.simulate(&production);
 		let stock_score = self.simulation.optimize.iter().fold(0, |acc, key| {
 			let resource_score = inventory.get(key).unwrap_or(&0);
 			acc + resource_score
 		});
-		// if self.simulation.optimize_time {
-		// 	return if stock_score >= n_steps {
-		// 		(stock_score - n_steps, updated_production)
-		// 	} else {
-		// 		(0, updated_production)
-		// 	}
-		// }
-		(stock_score, production)
+		(stock_score, steps)
 	}
 
 	// return top 10% of the population, sorted
-	fn select(&mut self, productions: Vec<Production>) -> Vec<Production> {
-		let mut p_scores: Vec<(usize, Production)> = productions.iter().map(|production| {
-			self.score(production.clone())
+	fn select(&mut self, paths: Vec<Path>) -> Vec<Path> {
+		let mut p_scores: Vec<(usize, Path)> = paths.iter().map(|path| {
+			self.score(path.clone())
 		})
 		.collect();
 		p_scores.sort_by(|(score_a, _a), (score_b, _b)| { score_b.cmp(score_a) });
 		self.stats.update_scores(p_scores.iter().map(|p_score| { p_score.0 }).collect());
-		let best: Vec<Production> = p_scores.iter().take(self.generation_size / 10).map(|p_score| { p_score.clone().1 }).collect();
+		let best: Vec<Path> = p_scores.iter().take(self.generation_size / 10).map(|p_score| { p_score.clone().1 }).collect();
 		best
 	}
 
-	fn batchify(&self, process_names: Vec<String>) -> Production {
+	fn batchify(&self, process_names: Path) -> Production {
 		let processes: Vec<Process> = process_names.into_iter().map(|process_name| {
 			self.simulation.processes.get(&process_name).unwrap().clone() // TODO: protect!
 		}).collect();
