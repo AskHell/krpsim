@@ -12,7 +12,10 @@ pub enum Algorithm {
 	Genetic
 }
 
-pub type Production = Vec<String>;
+pub type Duration = usize;
+pub type Steps = Vec<String>;
+type Batch = (Duration, Steps);
+pub type Production = Vec<Batch>;
 
 // TODO: unmock
 fn get_algorithm(_simulation: &Simulation) -> Algorithm {

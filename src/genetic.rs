@@ -11,11 +11,8 @@ use crate::{
 	inventory::Inventory,
 	check::{manage_resources, consume_resources, produce_resources},
 	genetic_plot::plot,
-	solver::Production,
+	solver::{Production, Steps, Duration},
 };
-
-type Duration = usize;
-type Batch = (Duration, Vec<String>);
 
 #[derive(Serialize, Deserialize)]
 pub struct Config {
@@ -158,8 +155,8 @@ impl GeneticSolver {
 		.collect()
 	}
 
-	fn generate_one(&self) -> Production {
-		let mut production: Production = vec![];
+	fn generate_one(&self) -> Steps {
+		let mut production: Steps = vec![];
 		let mut rng = rand::thread_rng();
 		let mut simulation_inventory = self.simulation.inventory.clone();
 		for _ in 0..self.max_depth {
@@ -176,23 +173,30 @@ impl GeneticSolver {
 	}
 	
 	// First random generation, doable paths
-	fn generate(&self) -> Vec<Production> {
+	fn generate(&self) -> Vec<Steps> {
 		(0..self.generation_size).map(|_| {
 			self.generate_one()
 		})
 		.collect()
 	}
 
-	fn simulate(&self, production: &Production) -> (Inventory, usize) {
+	fn simulate_steps(&self, steps: &Steps, stock: Inventory) -> Inventory {
+		steps.iter().map(|process_name| {
+			self.simulation.processes.get(process_name).unwrap().clone() // TODO: protect
+		})
+		.fold(stock.clone(), |acc, process| {
+			manage_resources(acc, &process).unwrap() // TODO: protect
+		})
+	}
+
+	fn simulate(&self, production: &Production) -> (Inventory, Duration) {
 		let simulation_inventory = self.simulation.inventory.clone();
 		let initial_acc = (simulation_inventory, 0);
 		production
 			.iter()
-			.fold(initial_acc, |(inventory, n_steps), process_name| {
-				let process = self.simulation.processes.get(process_name).unwrap();
-				let new_inventory = manage_resources(inventory, &process).unwrap();
-				// println!("{:?}", new_inventory);
-				(new_inventory, n_steps + 1)
+			.fold(initial_acc, |(stock, duration), (step_duration, step_processes)| {
+				let new_stock = self.simulate_steps(&step_processes, stock);
+				(new_stock.clone(), duration + step_duration)
 			})
 	}
 
@@ -213,22 +217,19 @@ impl GeneticSolver {
 		(stock_score, production)
 	}
 
-	// return best 10% of the population sorted
+	// return top 10% of the population, sorted
 	fn select(&mut self, productions: Vec<Production>) -> Vec<Production> {
 		let mut p_scores: Vec<(usize, Production)> = productions.iter().map(|production| {
 			self.score(production.clone())
 		})
 		.collect();
-		// DEBUG
-		// - average score
-		// - average size
 		p_scores.sort_by(|(score_a, _a), (score_b, _b)| { score_b.cmp(score_a) });
 		self.stats.update_scores(p_scores.iter().map(|p_score| { p_score.0 }).collect());
 		let best: Vec<Production> = p_scores.iter().take(self.generation_size / 10).map(|p_score| { p_score.clone().1 }).collect();
 		best
 	}
 
-	fn batchify(&self, process_names: Vec<String>) -> Vec<Batch> {
+	fn batchify(&self, process_names: Vec<String>) -> Production {
 		let processes: Vec<Process> = process_names.into_iter().map(|process_name| {
 			self.simulation.processes.get(&process_name).unwrap().clone() // TODO: protect!
 		}).collect();
