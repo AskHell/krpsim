@@ -127,8 +127,29 @@ impl GeneticSolver {
 		Ok((best_production, self.stats.clone()))
 	}
 
+	fn mutate(&self, mutation_force: f32, mut path: Path) -> Path {
+		let len = path.len();
+		let split_at = len - (len as f32 * mutation_force) as usize;
+		path.truncate(split_at);
+		let rest = self.generate_one(len - split_at);
+		[&path[..], &rest[..]].concat()
+	}
+
 	fn shuffle(&self, steps: Vec<Path>) -> Vec<Path> {
-		unimplemented!()
+		let mut rng = rand::thread_rng();
+		let mutation_mult = 1. / self.mutation_chance;
+		steps
+			.into_iter()
+			.map(|path| {
+				let i = rng.gen_range(0., 1.);
+				if i <= self.mutation_chance {
+					let mutation_force = i * mutation_mult;
+					self.mutate(mutation_force, path)
+				} else {
+					path
+				}
+			})
+			.collect()
 	}
 
 	fn get_available_steps(&self, inventory: &Inventory) -> Vec<(String, Inventory)> {
@@ -142,7 +163,7 @@ impl GeneticSolver {
 		.collect()
 	}
 
-	fn generate_one(&self) -> Path {
+	fn generate_one(&self, len: usize) -> Path {
 		let mut production: Path = vec![];
 		let mut rng = rand::thread_rng();
 		let mut simulation_inventory = self.simulation.inventory.clone();
@@ -162,7 +183,7 @@ impl GeneticSolver {
 	// First random generation, doable paths
 	fn generate(&self) -> Vec<Path> {
 		(0..self.generation_size).map(|_| {
-			self.generate_one()
+			self.generate_one(self.max_depth)
 		})
 		.collect()
 	}
