@@ -10,7 +10,7 @@ use crate::{
 	inventory::Inventory,
 	check::{manage_resources},
 	genetic_plot::plot,
-	score::{Score, score},
+	score::{Score, Scorer},
 	solver::{Production, Path, batchify},
 	utils::fibonacci_n,
 };
@@ -56,6 +56,7 @@ struct GeneticSolver {
 	simulation: Simulation,
 	time_weight: f32,
 	stats: Stats,
+	scorer: Scorer,
 }
 
 pub fn solve<'a>(simulation: Simulation, config: Config) -> Result<Production, &'a str> {
@@ -75,9 +76,10 @@ impl GeneticSolver {
 			generation_size: config.generation_size,
 			iterations: config.iterations,
 			time_weight: config.time_weight,
-			simulation,
+			simulation: simulation.clone(),
 			weigths: fibonacci_n(config.generation_size),
 			stats: Stats::new(),
+			scorer: Scorer::new(simulation, config.time_weight)
 		};
 		solver.weigths.reverse();
 		solver
@@ -95,8 +97,8 @@ impl GeneticSolver {
 		}
 		let best_path = parents.into_iter()
 			.max_by(|pa, pb| {
-				let (score_a, _) = score(&self.simulation, pa.clone(), self.time_weight);
-				let (score_b, _) = score(&self.simulation, pb.clone(), self.time_weight);
+				let score_a = self.scorer.score(pa);
+				let score_b = self.scorer.score(pb);
 				score_a.cmp(&score_b)
 			})
 			.unwrap_or(vec![]);
@@ -167,8 +169,9 @@ impl GeneticSolver {
 
 	// return top 10% of the population, sorted
 	fn select(&mut self, paths: Vec<Path>) -> Vec<Path> {
-		let mut p_scores: Vec<(Score, Path)> = paths.iter().map(|path| {
-			score(&self.simulation, path.clone(), self.time_weight)
+		let mut p_scores: Vec<(Score, Path)> = paths.into_iter().map(|path| {
+			let score = self.scorer.score(&path);
+			(score, path)
 		})
 		.collect();
 		p_scores.sort_by(|(score_a, _a), (score_b, _b)| { score_b.cmp(score_a) });

@@ -20,10 +20,6 @@ pub struct Resource {
 
 type ResourceMap = HashMap<String, Resource>;
 
-pub struct Scorer {
-	simulation: Simulation,
-	resource_map: ResourceMap,
-}
 
 fn find_dependencies(simulation: &Simulation, resource_name: &String) -> Option<Vec<ast::Resource>> {
 	let mut dependencies: Vec<ast::Resource> = vec![];
@@ -96,27 +92,33 @@ pub fn build_resource_map(simulation: &Simulation) -> ResourceMap {
 	resource_map
 }
 
-impl Scorer {
-	pub fn new(simulation: Simulation) -> Self {
-		let resource_map = build_resource_map(&simulation);
-		Self {
-			simulation,
-			resource_map,
-		}
-	}
+pub struct Scorer {
+	simulation: Simulation,
+	resource_map: ResourceMap,
+	time_weight: f32
 }
 
-pub fn score(simulation: &Simulation, path: Path, time_weight: f32) -> (Score, Path) {
-	let (inventory, duration) = simulate(simulation, &path, simulation.optimize_time);
-	for (name, quantity) in inventory.clone() {
-		println!("DEBUG: name: {:?}", name);
-		println!("DEBUG: quantity: {:?}", quantity);
+impl Scorer {
+	pub fn new(simulation: Simulation, time_weight: f32) -> Self {
+		let resource_map = build_resource_map(&simulation);
+		Self {
+			simulation: simulation.clone(),
+			resource_map,
+			time_weight: if simulation.optimize_time { time_weight } else { 0. }
+		}
 	}
-	let stock_score = simulation.optimize.iter().fold(0, |acc, key| {
-		let resource_score = inventory.get(key).unwrap_or(&0);
-		acc + *resource_score as Score
-	});
-	let time_score = (duration as f32 * time_weight) as Score;
-	let score: Score = stock_score - ((time_score as f32 * time_weight) as Score); 
-	(score, path)
+
+	pub fn score(&self, path: &Path) -> Score {
+		let (inventory, duration) = simulate(&self.simulation, &path, self.simulation.optimize_time);
+		let stock_score =
+			inventory
+			.into_iter()
+			.fold(0, |score, (name, quantity)| {
+				let resource = self.resource_map.get(&name).unwrap(); //TODO: protect
+				let resource_score = resource.weight * resource.frequency * quantity;
+				score + resource_score
+			});
+		let time_score = duration as f32 * self.time_weight;
+		time_score.round() as Score + stock_score as Score
+	}
 }
