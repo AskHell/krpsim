@@ -40,11 +40,12 @@ pub fn solve(simulation: Simulation) -> Result<Production, String> {
 }
 
 
+pub fn batchify(simulation: &Simulation, process_names: Path) -> Result<Production, String> {
+	let processes: Vec<&Process> = process_names.iter().map(|process_name| {
+		simulation.processes.get(process_name).ok_or(format!("No process found: {}", process_name)).clone()
+	})
+	.collect::<Result<Vec<&Process>, String>>()?;
 
-pub fn batchify(simulation: &Simulation, process_names: Path) -> Production {
-	let processes: Vec<Process> = process_names.into_iter().map(|process_name| {
-		simulation.processes.get(&process_name).unwrap().clone() // TODO: protect!
-	}).collect();
 	let mut batched_processes = vec![];
 	let mut current_batch = (0, vec![]);
 	let start_stock = simulation.inventory.clone();
@@ -60,16 +61,22 @@ pub fn batchify(simulation: &Simulation, process_names: Path) -> Production {
 			}
 			None => {
 				batched_processes.push(current_batch.clone());
-				batch_stock = current_batch.1
+				let processes: Vec<&Process> = current_batch.1
 					.iter()
-					.map(|batch_process_name| { simulation.processes.get(batch_process_name).unwrap().clone() }) // TODO: protect
-					.fold(start_stock.clone(), |acc, process| { 
-						produce_resources(&process.output, acc).unwrap() // TODO: protect
-					});
+					.map(|batch_process_name| {
+						simulation.processes.get(batch_process_name).ok_or(format!("No process found: {}", batch_process_name)).clone()
+					})
+					.collect::<Result<Vec<&Process>, String>>()?;
+
+				batch_stock = processes
+					.iter()
+					.try_fold(start_stock.clone(), |acc, process| { 
+						produce_resources(&process.output, acc)
+					})?;
 				current_batch = (0, vec![]);
 			}
 		}
 	}
 	batched_processes.push(current_batch);
-	batched_processes
+	Ok(batched_processes)
 }
