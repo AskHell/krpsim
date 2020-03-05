@@ -54,7 +54,6 @@ struct GeneticSolver {
 	iterations: usize,
 	weigths: Vec<usize>,
 	simulation: Simulation,
-	time_weight: f32,
 	stats: Stats,
 	scorer: Scorer,
 }
@@ -75,7 +74,6 @@ impl GeneticSolver {
 			max_depth: config.max_depth,
 			generation_size: config.generation_size,
 			iterations: config.iterations,
-			time_weight: config.time_weight,
 			simulation: simulation.clone(),
 			weigths: fibonacci_n(config.generation_size),
 			stats: Stats::new(),
@@ -170,7 +168,7 @@ impl GeneticSolver {
 	// return top 10% of the population, sorted
 	fn select(&mut self, paths: Vec<Path>) -> Vec<Path> {
 		let mut p_scores: Vec<(Score, Path)> = paths.into_iter().map(|path| {
-			let score = self.scorer.score(&path);
+			let score = self.scorer.score(&path).unwrap_or(-1);
 			(score, path)
 		})
 		.collect();

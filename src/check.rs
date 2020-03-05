@@ -5,13 +5,13 @@ pub struct Output {
 	pub steps: Vec<String>
 }
 
-fn consume_resource<'a>(acc_res: Result<Inventory, &'a str>, resource: &Resource) -> Result<Inventory, &'a str> {
+fn consume_resource<'a>(acc_res: Result<Inventory, String>, resource: &Resource) -> Result<Inventory, String> {
 	match acc_res {
 		Ok (acc) => {
-			let n_items = acc.get(&resource.name).ok_or("Unable to find resource in inventory")?;
+			let n_items = acc.get(&resource.name).ok_or("Unable to find resource in inventory".to_string())?;
 			let mut new_acc = acc.clone();
 			if *n_items < resource.quantity {
-				Err("Not enough available resources")
+				Err("Not enough available resources".to_string())
 			} else {
 				new_acc.insert(resource.name.clone(), *n_items - resource.quantity);
 				Ok(new_acc)
@@ -21,18 +21,18 @@ fn consume_resource<'a>(acc_res: Result<Inventory, &'a str>, resource: &Resource
 	}
 }
 
-pub fn consume_resources<'a>(input: &Vec<Resource>, inventory: Inventory) -> Result<Inventory, &'a str> {
+pub fn consume_resources<'a>(input: &Vec<Resource>, inventory: Inventory) -> Result<Inventory, String> {
 	let original_acc = Ok(inventory);
 	input
 		.into_iter()
 		.fold(original_acc, consume_resource)
 }
 
-pub fn produce_resources<'a>(output: &Vec<Resource>, inventory: Inventory) -> Result<Inventory, &'a str> {
+pub fn produce_resources<'a>(output: &Vec<Resource>, inventory: Inventory) -> Result<Inventory, String> {
 	let original_acc = Ok(inventory);
 	output
 		.into_iter()
-		.fold(original_acc, |acc_res: Result<Inventory, &'a str>, resource| {
+		.fold(original_acc, |acc_res: Result<Inventory, String>, resource| {
 			match acc_res {
 				Ok (acc) => {
 					let n_items = acc.get(&resource.name).unwrap_or(&0);
@@ -45,12 +45,12 @@ pub fn produce_resources<'a>(output: &Vec<Resource>, inventory: Inventory) -> Re
 		})
 }
 
-pub fn manage_resources<'a>(inventory: Inventory, process: &Process) -> Result <Inventory, &'a str> {
+pub fn manage_resources<'a>(inventory: Inventory, process: &Process) -> Result <Inventory, String> {
 	consume_resources(&process.input, inventory)
 		.and_then(|consumed_inventory| produce_resources(&process.output, consumed_inventory))
 }
 
-pub fn check<'a>(simulation: Simulation, output: Output) -> Result <Inventory, &'a str> {
+pub fn check<'a>(simulation: Simulation, output: Output) -> Result <Inventory, String> {
 	output.steps.iter()
 		.fold(Ok(simulation.inventory.clone()), |inventory_res, step| {
 			match inventory_res {
