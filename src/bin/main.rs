@@ -7,8 +7,7 @@ use krpsim::{
     parser::SimulationBuilderParser,
     ast::{Simulation},
 	solver::{solve, Production},
-	utils::generalize_error,
-	score::build_resource_map,
+	utils::generalize_error
 };
 
 fn parse<'a>(content: String) -> Result<Simulation, String> {
@@ -52,8 +51,6 @@ fn krpsim() -> Result<Production, String> {
 	let mut simulation_content = String::new();
 	simulation_file.read_to_string(&mut simulation_content).unwrap();
 	let simulation = parse(simulation_content)?;
-	// let map = build_resource_map(&simulation);
-	// println!("{:?}", map);
 	solve(simulation)
 }
 

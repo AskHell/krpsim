@@ -28,7 +28,7 @@ fn simulate_path(simulation: &Simulation, path: &Path) -> Result<(Inventory, Dur
 fn simulate_batch(simulation: &Simulation, path: &Path) -> Result<(Inventory, Duration), String> {
 	let simulation_inventory = simulation.inventory.clone();
 	let initial_acc = (simulation_inventory, 0);
-	let production = batchify(simulation, path.clone());
+	let production = batchify(simulation, path.clone())?;
 	production
 		.iter()
 		.try_fold(initial_acc, |(stock, duration), (step_duration, step_processes)| {

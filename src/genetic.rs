@@ -58,7 +58,7 @@ struct GeneticSolver {
 	scorer: Scorer,
 }
 
-pub fn solve<'a>(simulation: Simulation, config: Config) -> Result<Production, &'a str> {
+pub fn solve<'a>(simulation: Simulation, config: Config) -> Result<Production, String> {
 	let mut solver = GeneticSolver::new(config, simulation.clone());
 	solver.solve()
 	.map(|(production, stats)| {
@@ -83,7 +83,7 @@ impl GeneticSolver {
 		solver
 	}
 
-	pub fn solve<'a>(&mut self) -> Result<(Production, Stats), &'a str> {
+	pub fn solve<'a>(&mut self) -> Result<(Production, Stats), String> {
 		let mut parents: Vec<Path> = vec![];
 		for i in 0..self.iterations {
 			let generation = if i == 0 {
@@ -100,7 +100,7 @@ impl GeneticSolver {
 				score_a.cmp(&score_b)
 			})
 			.unwrap_or(vec![]);
-		let best_production = batchify(&self.simulation, best_path);
+		let best_production = batchify(&self.simulation, best_path)?;
 		Ok((best_production, self.stats.clone()))
 	}
 
