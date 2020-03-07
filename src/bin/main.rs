@@ -4,18 +4,11 @@ use std::io::Read;
 use clap::{Arg, App};
 
 use krpsim::{
-    parser::SimulationBuilderParser,
-    ast::{Simulation},
-	solver::{solve, Production},
-	utils::generalize_error
+    ast::{parse},
+	solver::{solve, Production, Path},
+	utils::generalize_error,
+	check::{Output, check}
 };
-
-fn parse<'a>(content: String) -> Result<Simulation, String> {
-    SimulationBuilderParser::new()
-        .parse(&content)
-        .map_err(|err| format!("{:?}", err))
-        .map(|simbuilder| Simulation::from(simbuilder))
-}
 
 // Todo: error if no delay ?
 fn parse_args() -> Result<(String, usize), String> {
@@ -51,7 +44,14 @@ fn krpsim() -> Result<Production, String> {
 	let mut simulation_content = String::new();
 	simulation_file.read_to_string(&mut simulation_content).unwrap();
 	let simulation = parse(simulation_content)?;
-	solve(simulation)
+	let result = solve(simulation.clone())?;
+	let final_path:Vec<Path> = result.clone().into_iter().map(|(_, path)| { path }).collect();
+	let flat_path = final_path.into_iter().fold(vec![], |acc, curr| { [&acc[..], &curr[..]].concat() });
+	let output = Output { steps: flat_path };
+	let final_inventory = check(simulation, output)?;
+	println!("DEBUG: final_inventory: {:?}", final_inventory);
+	Ok(result)
+	
 }
 
 fn main() {
@@ -59,7 +59,9 @@ fn main() {
 	
 	match result {
 		Err (err) => println!("An error occurred: {:?}", err),
-		Ok (best_path) => println!("{:?}", best_path)
+		Ok (best_path) => {
+			println!("{:?}", best_path);
+		}
 	}
 }
 

@@ -14,4 +14,7 @@ pub mod simulate;
 mod check_tests;
 
 #[cfg(test)]
+mod solver_test;
+
+#[cfg(test)]
 #[macro_use] extern crate maplit;

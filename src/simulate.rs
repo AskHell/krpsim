@@ -6,6 +6,7 @@ use crate::check::{manage_resources};
 fn simulate_steps(simulation: &Simulation, steps: &Path, stock: Inventory) -> Result<Inventory, String> {
 	let processes: Vec<&Process> = steps
 		.iter().map(|process_name| {
+			println!("DEBUG: process_name: {:?}", process_name);
 			simulation.processes.get(process_name).ok_or(format!("Unknown process: {:?}", process_name))
 		})
 		.collect::<Result<Vec<&Process>, String>>()?;

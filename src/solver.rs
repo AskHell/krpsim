@@ -17,7 +17,7 @@ pub enum Algorithm {
 pub type Duration = usize;
 pub type Step = String;
 pub type Path = Vec<Step>;
-type Batch = (Duration, Path);
+pub type Batch = (Duration, Path);
 pub type Production = Vec<Batch>;
 
 // TODO: unmock
@@ -39,7 +39,8 @@ pub fn solve(simulation: Simulation) -> Result<Production, String> {
 	}
 }
 
-
+// TODO: memoize
+// TODO: refacto
 pub fn batchify(simulation: &Simulation, process_names: Path) -> Result<Production, String> {
 	let processes: Vec<&Process> = process_names.iter().map(|process_name| {
 		simulation.processes.get(process_name).ok_or(format!("No process found: {}", process_name)).clone()
@@ -50,6 +51,8 @@ pub fn batchify(simulation: &Simulation, process_names: Path) -> Result<Producti
 	let mut current_batch = (0, vec![]);
 	let start_stock = simulation.inventory.clone();
 	let mut batch_stock = simulation.inventory.clone();
+	let mut final_name = "".to_string();
+	let mut final_duration = 0;
 	for process in processes {
 		match consume_resources(&process.input, batch_stock.clone()).ok() {
 			Some (updated_stock) => {
@@ -74,9 +77,19 @@ pub fn batchify(simulation: &Simulation, process_names: Path) -> Result<Producti
 						produce_resources(&process.output, acc)
 					})?;
 				current_batch = (0, vec![]);
+				final_name = process.name.clone();
+				final_duration = process.duration;
 			}
 		}
 	}
+	let (duration, batch_processes) = current_batch.clone();
+	let new_duration = max(duration, final_duration);
+	let new_batch_processes = [&batch_processes[..], &[final_name.clone()]].concat();
+	current_batch = (new_duration, new_batch_processes);
 	batched_processes.push(current_batch);
 	Ok(batched_processes)
 }
+
+// pub fn batchify(simulation: &Simulation, process_name: Path) -> Result<Production, String> {
+// 	unimplemented!()
+// }

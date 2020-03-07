@@ -61,7 +61,7 @@ fn test_manage_resources() {
 	let mut expected_inventory = HashMap::new();
 	expected_inventory.insert("wood".to_string(), 7);
 	expected_inventory.insert("premium_chair".to_string(), 1);
-	let expected: Result<Inventory, &str> = Ok(expected_inventory);
+	let expected: Result<Inventory, String> = Ok(expected_inventory);
 
 	let build_premium_process = Process {
 		name: String::from("build_premium"),

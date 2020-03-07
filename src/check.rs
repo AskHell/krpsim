@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use super::inventory::Inventory;
 use super::ast::{Process, Resource, Simulation};
 
@@ -46,8 +48,16 @@ pub fn produce_resources<'a>(output: &Vec<Resource>, inventory: Inventory) -> Re
 }
 
 pub fn manage_resources<'a>(inventory: Inventory, process: &Process) -> Result <Inventory, String> {
+	let mut hash_ok: Inventory = HashMap::new();
+	hash_ok.insert("fond".to_string(), 1);
+	hash_ok.insert("etagere".to_string(), 3);
+	hash_ok.insert("montant".to_string(), 1);
+	hash_ok.insert("planche".to_string(), 1);
+	
 	consume_resources(&process.input, inventory)
-		.and_then(|consumed_inventory| produce_resources(&process.output, consumed_inventory))
+		.and_then(|consumed_inventory| {
+			produce_resources(&process.output, consumed_inventory)
+		})
 }
 
 pub fn check<'a>(simulation: Simulation, output: Output) -> Result <Inventory, String> {
