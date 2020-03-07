@@ -49,7 +49,6 @@ fn krpsim() -> Result<Production, String> {
 	let flat_path = final_path.into_iter().fold(vec![], |acc, curr| { [&acc[..], &curr[..]].concat() });
 	let output = Output { steps: flat_path };
 	let final_inventory = check(simulation, output)?;
-	println!("DEBUG: final_inventory: {:?}", final_inventory);
 	Ok(result)
 	
 }

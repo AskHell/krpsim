@@ -10,7 +10,7 @@ use crate::{
 	inventory::Inventory,
 	check::{manage_resources},
 	genetic_plot::plot,
-	score::{Score, Scorer},
+	score::{Score, Scorer, BroScore},
 	solver::{Production, Path, batchify},
 	simulate::{simulate},
 	utils::fibonacci_n,
@@ -71,6 +71,7 @@ pub fn solve<'a>(simulation: Simulation, config: Config) -> Result<Production, S
 
 impl GeneticSolver {
 	// TODO: parents_percentage in config
+	// TODO: broScore dyn
 	pub fn new(config: Config, simulation: Simulation) -> Self {
 		let parents_percentage = 10;
 		let parents_size =
@@ -88,7 +89,7 @@ impl GeneticSolver {
 			simulation: simulation.clone(),
 			weigths: fibonacci_n(config.generation_size),
 			stats: Stats::new(),
-			scorer: Scorer::new(simulation, config.time_weight)
+			scorer: Scorer::new(simulation, config.time_weight, BroScore::Leo)
 		};
 		solver.weigths.reverse();
 		solver

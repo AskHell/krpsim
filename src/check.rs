@@ -8,7 +8,6 @@ pub struct Output {
 fn consume_resource(acc_res: Result<Inventory, String>, resource: &Resource) -> Result<Inventory, String> {
 	match acc_res {
 		Ok (acc) => {
-			println!("DEBUG: acc: {:?}", acc);
 			let n_items = acc.get(&resource.name).ok_or(format!("Unable to find resource {} in inventory", resource.name))?;
 			let mut new_acc = acc.clone();
 			if *n_items < resource.quantity {
