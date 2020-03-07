@@ -52,6 +52,7 @@ struct GeneticSolver {
 	mutation_chance: f32,
 	max_depth: usize,
 	generation_size: usize,
+	parents_size: usize,
 	iterations: usize,
 	weigths: Vec<usize>,
 	simulation: Simulation,
@@ -63,17 +64,26 @@ pub fn solve<'a>(simulation: Simulation, config: Config) -> Result<Production, S
 	let mut solver = GeneticSolver::new(config, simulation.clone());
 	solver.solve()
 	.map(|(production, stats)| {
-		// plot(stats);
+		plot(stats);
 		production
 	})
 }
 
 impl GeneticSolver {
+	// TODO: parents_percentage in config
 	pub fn new(config: Config, simulation: Simulation) -> Self {
+		let parents_percentage = 10;
+		let parents_size =
+			if config.generation_size / parents_percentage > 1 {
+				config.generation_size / parents_percentage
+			} else {
+				1
+			};
 		let mut solver = Self {
 			mutation_chance: config.mutation_chance,
 			max_depth: config.max_depth,
 			generation_size: config.generation_size,
+			parents_size,
 			iterations: config.iterations,
 			simulation: simulation.clone(),
 			weigths: fibonacci_n(config.generation_size),
@@ -177,7 +187,13 @@ impl GeneticSolver {
 		.collect();
 		p_scores.sort_by(|(score_a, _), (score_b, _)| { score_b.cmp(score_a) });
 		self.stats.update_scores(p_scores.iter().map(|p_score| { p_score.0 }).collect());
-		let best: Vec<Path> = p_scores.iter().take(self.generation_size / 10).map(|p_score| { p_score.clone().1 }).collect();
+		let best: Vec<Path> = p_scores
+			.iter()
+			.take(self.parents_size)
+			.map(|(_, path)| {
+				path.clone()
+			})
+			.collect();
 		best
 	}
 }

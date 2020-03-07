@@ -42,7 +42,7 @@ fn update_resource_map(map: &mut ResourceMap, resource: &ast::Resource, weight: 
 	let to_insert = Resource {
 		name: resource.name.clone(),
 		weight: max(existing_resource.weight, weight),
-		frequency: existing_resource.frequency + 1,
+		frequency: existing_resource.frequency + resource.quantity,
 	};
 	map.insert(resource.name.clone(), to_insert);
 }
@@ -62,7 +62,7 @@ fn dive_in(simulation: &Simulation, map: &mut ResourceMap, dependencies: &Vec<as
 	1
 }
 
-pub fn build_resource_map(simulation: &Simulation, default_resource: &Resource) -> ResourceMap {
+pub fn build_resource_map(simulation: &Simulation, default_resource: &Resource, weight_multiplier: usize) -> ResourceMap {
 	let mut resource_map: ResourceMap = HashMap::new();
 
 	for resource_name in &simulation.optimize {
@@ -84,7 +84,7 @@ pub fn build_resource_map(simulation: &Simulation, default_resource: &Resource) 
 			name: resource_name.clone(),
 			quantity: 1
 		};
-		update_resource_map(&mut resource_map, &resource, max_weight * 10, default_resource.clone());
+		update_resource_map(&mut resource_map, &resource, max_weight * weight_multiplier, default_resource.clone());
 	}
 	resource_map
 }
@@ -93,7 +93,7 @@ pub struct Scorer {
 	simulation: Simulation,
 	resource_map: ResourceMap,
 	time_weight: f32,
-	default_resource: Resource
+	default_resource: Resource,
 }
 
 impl Scorer {
@@ -103,30 +103,29 @@ impl Scorer {
 			weight: 0,
 			frequency: 0,
 		};
-		let resource_map = build_resource_map(&simulation, &default_resource);
+		let resource_map = build_resource_map(&simulation, &default_resource, 100);
+		println!("DEBUG: resource_map: {:?}", resource_map);
 		Self {
 			simulation: simulation.clone(),
 			resource_map,
 			time_weight: if simulation.optimize_time { time_weight } else { 0. },
-			default_resource
+			default_resource,
 		}
 	}
 
 	pub fn score(&self, path: &Path) -> Result<Score, String> {
-		// let (inventory, duration) = simulate(&self.simulation, &path, self.simulation.optimize_time)?;
 		let (inventory, duration) = simulate(&self.simulation, &path, false)?;
 		let stock_score =
 			inventory
 			.into_iter()
-			.fold(0, |score, (name, quantity)| {
+			.fold(0, |score, (name, _)| {
 				let default = self.default_resource.clone();
 				let resource = self.resource_map.get(&name).unwrap_or(&default);
-				let resource_score = resource.weight * resource.frequency * quantity;
+				let resource_score = resource.weight * resource.frequency;
 				score + resource_score
 			});
-		// let time_score = duration as f32 * self.time_weight;
-		// let score = time_score.round() as Score + stock_score as Score;
-		let score = stock_score as Score;
+		let time_score = duration as f32 * self.time_weight;
+		let score = stock_score as Score - time_score.round() as Score;
 		Ok(score)
 	}
 }
