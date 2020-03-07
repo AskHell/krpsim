@@ -7,7 +7,7 @@ pub struct Output {
 	pub steps: Vec<String>
 }
 
-fn consume_resource<'a>(acc_res: Result<Inventory, String>, resource: &Resource) -> Result<Inventory, String> {
+fn consume_resource(acc_res: Result<Inventory, String>, resource: &Resource) -> Result<Inventory, String> {
 	match acc_res {
 		Ok (acc) => {
 			let n_items = acc.get(&resource.name).ok_or("Unable to find resource in inventory".to_string())?;
@@ -23,14 +23,14 @@ fn consume_resource<'a>(acc_res: Result<Inventory, String>, resource: &Resource)
 	}
 }
 
-pub fn consume_resources<'a>(input: &Vec<Resource>, inventory: Inventory) -> Result<Inventory, String> {
+pub fn consume_resources(input: &Vec<Resource>, inventory: Inventory) -> Result<Inventory, String> {
 	let original_acc = Ok(inventory);
 	input
 		.into_iter()
 		.fold(original_acc, consume_resource)
 }
 
-pub fn produce_resources<'a>(output: &Vec<Resource>, inventory: Inventory) -> Result<Inventory, String> {
+pub fn produce_resources(output: &Vec<Resource>, inventory: Inventory) -> Result<Inventory, String> {
 	let original_acc = Ok(inventory);
 	output
 		.into_iter()
@@ -47,16 +47,18 @@ pub fn produce_resources<'a>(output: &Vec<Resource>, inventory: Inventory) -> Re
 		})
 }
 
-pub fn manage_resources<'a>(inventory: Inventory, process: &Process) -> Result <Inventory, String> {
-	let mut hash_ok: Inventory = HashMap::new();
-	hash_ok.insert("fond".to_string(), 1);
-	hash_ok.insert("etagere".to_string(), 3);
-	hash_ok.insert("montant".to_string(), 1);
-	hash_ok.insert("planche".to_string(), 1);
-	
+pub fn manage_resources(inventory: Inventory, process: &Process) -> Result <Inventory, String> {
 	consume_resources(&process.input, inventory)
 		.and_then(|consumed_inventory| {
 			produce_resources(&process.output, consumed_inventory)
+		})
+}
+
+pub fn manage_multi_resources(base_inventory: Inventory, processes: Vec<&Process>) -> Result <Inventory, String> {
+	processes
+		.iter()
+		.try_fold(base_inventory, |inventory, process| {
+			manage_resources(inventory, process)
 		})
 }
 

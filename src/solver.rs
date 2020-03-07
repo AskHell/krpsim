@@ -1,13 +1,12 @@
 use std::fs::File;
 use std::io::Read;
-use std::cmp::max;
 
 use crate::{
 	genetic::solve as genetic_solve,
 	ast::{Simulation, Process},
 	genetic_config_parser::parse_genetic_config,
 	utils::generalize_error,
-	check::{consume_resources, produce_resources}
+	check::{consume_resources, manage_multi_resources}
 };
 
 pub enum Algorithm {
@@ -39,57 +38,50 @@ pub fn solve(simulation: Simulation) -> Result<Production, String> {
 	}
 }
 
+fn create_batch(processes: Vec<&Process>) -> Result<Batch, String> {
+	let duration = processes
+		.iter()
+		.map(|process| { process.duration} )
+		.max()
+		.ok_or("Can't find the longest process, probably an empty iterator")?;
+	let process_names = processes.iter().map(|process| { process.name.clone() } ).collect();
+	Ok((duration, process_names))
+}
+
 // TODO: memoize
-// TODO: refacto
 pub fn batchify(simulation: &Simulation, process_names: Path) -> Result<Production, String> {
-	let processes: Vec<&Process> = process_names.iter().map(|process_name| {
-		simulation.processes.get(process_name).ok_or(format!("No process found: {}", process_name)).clone()
+	let processes: Vec<&Process> = process_names
+		.into_iter().map(|process_name| {
+		simulation.processes.get(&process_name).ok_or(format!{"Unable to find process: {}", process_name})
 	})
 	.collect::<Result<Vec<&Process>, String>>()?;
 
-	let mut batched_processes = vec![];
-	let mut current_batch = (0, vec![]);
-	let start_stock = simulation.inventory.clone();
-	let mut batch_stock = simulation.inventory.clone();
-	let mut final_name = "".to_string();
-	let mut final_duration = 0;
-	for process in processes {
-		match consume_resources(&process.input, batch_stock.clone()).ok() {
-			Some (updated_stock) => {
-				batch_stock = updated_stock;
-				let (duration, batch_processes) = current_batch.clone();
-				let new_duration = max(duration, process.duration);
-				let new_batch_processes = [&batch_processes[..], &[process.name.clone()]].concat();
-				current_batch = (new_duration, new_batch_processes);
-			}
+	let mut batch_processes: Vec<&Process> = vec![];
+	let mut inventory = simulation.inventory.clone();
+	let mut base_inventory = simulation.inventory.clone();
+	let mut batched: Vec<Batch> = vec![];
+	let batched_res: Result<Vec<Batch>, String> = processes.iter().try_fold(batched, |mut batched, process| {
+		match consume_resources(&process.input, inventory.clone()).ok() {
+			Some (updated_inventory) => {
+				batch_processes.push(&process);
+				inventory = updated_inventory;
+				Ok(batched)
+			},
 			None => {
-				batched_processes.push(current_batch.clone());
-				let processes: Vec<&Process> = current_batch.1
-					.iter()
-					.map(|batch_process_name| {
-						simulation.processes.get(batch_process_name).ok_or(format!("No process found: {}", batch_process_name)).clone()
-					})
-					.collect::<Result<Vec<&Process>, String>>()?;
-
-				batch_stock = processes
-					.iter()
-					.try_fold(start_stock.clone(), |acc, process| { 
-						produce_resources(&process.output, acc)
-					})?;
-				current_batch = (0, vec![]);
-				final_name = process.name.clone();
-				final_duration = process.duration;
+				let tmp = inventory.clone();
+				inventory = manage_multi_resources(base_inventory.clone(), batch_processes.clone())?;
+				base_inventory = tmp;
+				let batch = create_batch(batch_processes.clone())?;
+				batched.push(batch);
+				batch_processes = vec![&process];
+				Ok(batched)
 			}
 		}
-	}
-	let (duration, batch_processes) = current_batch.clone();
-	let new_duration = max(duration, final_duration);
-	let new_batch_processes = [&batch_processes[..], &[final_name.clone()]].concat();
-	current_batch = (new_duration, new_batch_processes);
-	batched_processes.push(current_batch);
-	Ok(batched_processes)
+	});
+	batched = batched_res?;
+	if !batch_processes.is_empty() {
+		let batch = create_batch(batch_processes)?;
+		batched.push(batch);
+	};
+	Ok(batched)
 }
-
-// pub fn batchify(simulation: &Simulation, process_name: Path) -> Result<Production, String> {
-// 	unimplemented!()
-// }
