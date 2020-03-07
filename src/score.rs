@@ -11,14 +11,7 @@ pub type Score = i32;
 type Weight = usize;
 type Frequency = usize;
 
-#[derive(Debug, Clone)]
-pub struct Resource {
-	name: String,
-	weight: Weight,
-	frequency: Frequency,
-}
-
-type ResourceMap = HashMap<String, Resource>;
+type ScoreMap = HashMap<String, Score>;
 
 fn find_dependencies(simulation: &Simulation, resource_name: &String) -> Option<Vec<ast::Resource>> {
 	let mut dependencies: Vec<ast::Resource> = vec![];
@@ -37,92 +30,92 @@ fn find_dependencies(simulation: &Simulation, resource_name: &String) -> Option<
 	if dependencies.is_empty() { None } else { Some(dependencies) }
 }
 
-fn update_resource_map(map: &mut ResourceMap, resource: &ast::Resource, weight: usize, default: Resource) {
-	let existing_resource = map.get(&resource.name).unwrap_or(&default);
-	let to_insert = Resource {
-		name: resource.name.clone(),
-		weight: max(existing_resource.weight, weight),
-		frequency: existing_resource.frequency + resource.quantity,
-	};
-	map.insert(resource.name.clone(), to_insert);
+fn update_score_map(map: &mut ScoreMap, resource: &ast::Resource, weight: usize) {
+	let existing_score = map.get(&resource.name).unwrap_or(&0);
+	let score = max(existing_score, &(weight as Score * resource.quantity as Score));
+	map.insert(resource.name.clone(), *score);
 }
 
-fn dive_in(simulation: &Simulation, map: &mut ResourceMap, dependencies: &Vec<ast::Resource>, default_resource: &Resource) -> usize {
+fn dive_in(simulation: &Simulation, map: &mut ScoreMap, visited: &mut HashMap<String, bool>, dependencies: &Vec<ast::Resource>) -> usize {
 	for current_dependency in dependencies {
 		match find_dependencies(simulation, &current_dependency.name) {
 			Some (more_dep) => {
-				let weight = 10 * dive_in(simulation, map, &more_dep, default_resource);
-				update_resource_map(map, current_dependency, weight, default_resource.clone());
+				let filtered_dep: Vec<ast::Resource> = more_dep.into_iter().filter(|d| { !visited.contains_key(&d.name) }).collect();
+				for d in filtered_dep.clone() {
+					visited.insert(d.name.clone(), true);
+				}
+				let weight = 10 * dive_in(simulation, map, visited, &filtered_dep);
+				update_score_map(map, current_dependency, weight);
 			}
 			None => {
-				update_resource_map(map, current_dependency, 1, default_resource.clone());
+				update_score_map(map, current_dependency, 1);
 			}
 		}
 	}
 	1
 }
 
-pub fn build_resource_map(simulation: &Simulation, default_resource: &Resource, weight_multiplier: usize) -> ResourceMap {
-	let mut resource_map: ResourceMap = HashMap::new();
+fn build_score_map_leo(simulation: &Simulation, weight_multiplier: usize) -> ScoreMap {
+	let mut score_map: ScoreMap = HashMap::new();
 
 	for resource_name in &simulation.optimize {
 		match find_dependencies(simulation, resource_name) {
 			Some (dependencies) => {
-				dive_in(simulation, &mut resource_map, &dependencies, default_resource);
+				dive_in(simulation, &mut score_map, &mut HashMap::new(), &dependencies);
 			}
 			None => {}
 		}
 	}
-	let max_weight: usize =
-		resource_map
+	let max_score =
+		score_map
 			.iter()
-			.map(|(_, value)| { value.weight })
+			.map(|(_, value)| { value })
 			.max()
-			.unwrap_or(1);
+			.unwrap_or(&1);
 	for resource_name in &simulation.optimize {
 		let resource = ast::Resource {
 			name: resource_name.clone(),
 			quantity: 1
 		};
-		update_resource_map(&mut resource_map, &resource, max_weight * weight_multiplier, default_resource.clone());
+		update_score_map(&mut score_map, &resource, *max_score as usize * weight_multiplier);
 	}
-	resource_map
+	score_map
+}
+
+fn build_score_map(simulation: &Simulation, weight_multiplier: usize, broScore: BroScore) -> ScoreMap {
+	match broScore {
+		Leo => build_score_map_leo(simulation, weight_multiplier)
+	}
+}
+
+pub enum BroScore {
+	Leo
 }
 
 pub struct Scorer {
 	simulation: Simulation,
-	resource_map: ResourceMap,
+	score_map: ScoreMap,
 	time_weight: f32,
-	default_resource: Resource,
 }
 
 impl Scorer {
-	pub fn new(simulation: Simulation, time_weight: f32) -> Self {
-		let default_resource = Resource {
-			name: "".to_string(),
-			weight: 0,
-			frequency: 0,
-		};
-		let resource_map = build_resource_map(&simulation, &default_resource, 100);
-		println!("DEBUG: resource_map: {:?}", resource_map);
+	pub fn new(simulation: Simulation, time_weight: f32, broScore: BroScore) -> Self {
+		let score_map = build_score_map(&simulation, 100, broScore);
 		Self {
 			simulation: simulation.clone(),
-			resource_map,
+			score_map,
 			time_weight: if simulation.optimize_time { time_weight } else { 0. },
-			default_resource,
 		}
 	}
 
+	// TODO: memoize
 	pub fn score(&self, path: &Path) -> Result<Score, String> {
 		let (inventory, duration) = simulate(&self.simulation, &path, false)?;
 		let stock_score =
 			inventory
 			.into_iter()
 			.fold(0, |score, (name, _)| {
-				let default = self.default_resource.clone();
-				let resource = self.resource_map.get(&name).unwrap_or(&default);
-				let resource_score = resource.weight * resource.frequency;
-				score + resource_score
+				*self.score_map.get(&name).unwrap_or(&0)
 			});
 		let time_score = duration as f32 * self.time_weight;
 		let score = stock_score as Score - time_score.round() as Score;
