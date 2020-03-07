@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use super::inventory::Inventory;
 use super::ast::{Process, Resource, Simulation};
 
