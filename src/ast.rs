@@ -1,10 +1,12 @@
 use std::collections::HashMap;
+
 use super::inventory::{Inventory};
+use super::parser::{SimulationBuilderParser};
 
 #[derive(Debug, Clone)]
 pub struct ProcessBuilder {
     pub name: String,
-    pub input: Vec<Resource>,
+    pub input: Vec<Resource	>,
     pub output: Vec<Resource>,
     pub duration: usize
 }
@@ -22,8 +24,8 @@ impl ProcessBuilder {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Resource {
-        pub name: String,
-        pub quantity: usize,
+	pub name: String,
+	pub quantity: usize,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -154,4 +156,11 @@ impl Simulation {
             optimize_time,
         }
     }
+}
+
+pub fn parse<'a>(content: String) -> Result<Simulation, String> {
+    SimulationBuilderParser::new()
+        .parse(&content)
+        .map_err(|err| format!("{:?}", err))
+        .map(|simbuilder| Simulation::from(simbuilder))
 }

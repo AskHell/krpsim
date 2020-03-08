@@ -1,16 +1,12 @@
 // auto-generated: "lalrpop 0.17.2"
-// sha256: 70587104ae7696dbe61805881228ddf98a65e781b5d40476381645ac565501d
+// sha256: 8380d8664cd8866c667fd736bb31222cf7c819c814b507f2d892184dda791
 use std::str::FromStr;
-use std::collections::HashMap;
 use crate::{
     ast::{
         ProcessBuilder,
         SimulationBuilder,
+		Resource
     },
-    inventory::{
-        Inventory,
-        convert
-    }
 };
 #[allow(unused_extern_crates)]
 extern crate lalrpop_util as __lalrpop_util;
@@ -22,16 +18,12 @@ mod __parse__SimulationBuilder {
     #![allow(non_snake_case, non_camel_case_types, unused_mut, unused_variables, unused_imports, unused_parens)]
 
     use std::str::FromStr;
-    use std::collections::HashMap;
     use crate::{
     ast::{
         ProcessBuilder,
         SimulationBuilder,
+		Resource
     },
-    inventory::{
-        Inventory,
-        convert
-    }
 };
     #[allow(unused_extern_crates)]
     extern crate lalrpop_util as __lalrpop_util;
@@ -47,8 +39,8 @@ mod __parse__SimulationBuilder {
         Variant3(String),
         Variant4(::std::vec::Vec<String>),
         Variant5(::std::option::Option<(String, usize)>),
-        Variant6(Inventory),
-        Variant7(::std::option::Option<Inventory>),
+        Variant6(Vec<(String, usize)>),
+        Variant7(::std::option::Option<Vec<(String, usize)>>),
         Variant8((::std::vec::Vec<&'input str>, &'input str)),
         Variant9(::std::vec::Vec<&'input str>),
         Variant10(::std::option::Option<String>),
@@ -1268,17 +1260,6 @@ mod __parse__SimulationBuilder {
             _ => panic!("symbol type mismatch")
         }
     }
-    fn __pop_Variant6<
-      'input,
-    >(
-        __symbols: &mut ::std::vec::Vec<(usize,__Symbol<'input>,usize)>
-    ) -> (usize, Inventory, usize)
-     {
-        match __symbols.pop().unwrap() {
-            (__l, __Symbol::Variant6(__v), __r) => (__l, __v, __r),
-            _ => panic!("symbol type mismatch")
-        }
-    }
     fn __pop_Variant14<
       'input,
     >(
@@ -1309,6 +1290,17 @@ mod __parse__SimulationBuilder {
      {
         match __symbols.pop().unwrap() {
             (__l, __Symbol::Variant3(__v), __r) => (__l, __v, __r),
+            _ => panic!("symbol type mismatch")
+        }
+    }
+    fn __pop_Variant6<
+      'input,
+    >(
+        __symbols: &mut ::std::vec::Vec<(usize,__Symbol<'input>,usize)>
+    ) -> (usize, Vec<(String, usize)>, usize)
+     {
+        match __symbols.pop().unwrap() {
+            (__l, __Symbol::Variant6(__v), __r) => (__l, __v, __r),
             _ => panic!("symbol type mismatch")
         }
     }
@@ -1345,17 +1337,6 @@ mod __parse__SimulationBuilder {
             _ => panic!("symbol type mismatch")
         }
     }
-    fn __pop_Variant7<
-      'input,
-    >(
-        __symbols: &mut ::std::vec::Vec<(usize,__Symbol<'input>,usize)>
-    ) -> (usize, ::std::option::Option<Inventory>, usize)
-     {
-        match __symbols.pop().unwrap() {
-            (__l, __Symbol::Variant7(__v), __r) => (__l, __v, __r),
-            _ => panic!("symbol type mismatch")
-        }
-    }
     fn __pop_Variant10<
       'input,
     >(
@@ -1364,6 +1345,17 @@ mod __parse__SimulationBuilder {
      {
         match __symbols.pop().unwrap() {
             (__l, __Symbol::Variant10(__v), __r) => (__l, __v, __r),
+            _ => panic!("symbol type mismatch")
+        }
+    }
+    fn __pop_Variant7<
+      'input,
+    >(
+        __symbols: &mut ::std::vec::Vec<(usize,__Symbol<'input>,usize)>
+    ) -> (usize, ::std::option::Option<Vec<(String, usize)>>, usize)
+     {
+        match __symbols.pop().unwrap() {
+            (__l, __Symbol::Variant7(__v), __r) => (__l, __v, __r),
             _ => panic!("symbol type mismatch")
         }
     }
@@ -2460,16 +2452,12 @@ pub use self::__parse__SimulationBuilder::SimulationBuilderParser;
 mod __intern_token {
     #![allow(unused_imports)]
     use std::str::FromStr;
-    use std::collections::HashMap;
     use crate::{
     ast::{
         ProcessBuilder,
         SimulationBuilder,
+		Resource
     },
-    inventory::{
-        Inventory,
-        convert
-    }
 };
     #[allow(unused_extern_crates)]
     extern crate lalrpop_util as __lalrpop_util;
@@ -2663,17 +2651,17 @@ fn __action5<
     input: &'input str,
     (_, n, _): (usize, String, usize),
     (_, _, _): (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
-    (_, i, _): (usize, ::std::option::Option<Inventory>, usize),
+    (_, i, _): (usize, ::std::option::Option<Vec<(String, usize)>>, usize),
     (_, _, _): (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
-    (_, o, _): (usize, ::std::option::Option<Inventory>, usize),
+    (_, o, _): (usize, ::std::option::Option<Vec<(String, usize)>>, usize),
     (_, _, _): (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
     (_, d, _): (usize, usize, usize),
 ) -> ProcessBuilder
 {
     {
-        let i = i.unwrap_or(HashMap::new());
-        let o = o.unwrap_or(HashMap::new());
-        ProcessBuilder::new(n, vec![], vec![], d)
+        let i = i.unwrap_or(vec![]).into_iter().map(|(name, quantity)| { Resource { name, quantity }}).collect();
+        let o = o.unwrap_or(vec![]).into_iter().map(|(name, quantity)| { Resource { name, quantity }}).collect();
+        ProcessBuilder::new(n, i, o, d)
     }
 }
 
@@ -2686,13 +2674,13 @@ fn __action6<
     (_, l, _): (usize, ::std::vec::Vec<(String, usize)>, usize),
     (_, e, _): (usize, ::std::option::Option<(String, usize)>, usize),
     (_, _, _): (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
-) -> Inventory
+) -> Vec<(String, usize)>
 {
     {
         let mut vec = l;
 
         if let Some(e) = e { vec.push(e); }
-        convert(vec)
+		vec
     }
 }
 
@@ -2934,8 +2922,8 @@ fn __action26<
     'input,
 >(
     input: &'input str,
-    (_, __0, _): (usize, Inventory, usize),
-) -> ::std::option::Option<Inventory>
+    (_, __0, _): (usize, Vec<(String, usize)>, usize),
+) -> ::std::option::Option<Vec<(String, usize)>>
 {
     Some(__0)
 }
@@ -2947,7 +2935,7 @@ fn __action27<
     input: &'input str,
     __lookbehind: &usize,
     __lookahead: &usize,
-) -> ::std::option::Option<Inventory>
+) -> ::std::option::Option<Vec<(String, usize)>>
 {
     None
 }
@@ -3100,7 +3088,7 @@ fn __action38<
     __0: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
     __1: (usize, ::std::option::Option<(String, usize)>, usize),
     __2: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
-) -> Inventory
+) -> Vec<(String, usize)>
 {
     let __start0 = __0.2.clone();
     let __end0 = __1.0.clone();
@@ -3128,7 +3116,7 @@ fn __action39<
     __1: (usize, ::std::vec::Vec<(String, usize)>, usize),
     __2: (usize, ::std::option::Option<(String, usize)>, usize),
     __3: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
-) -> Inventory
+) -> Vec<(String, usize)>
 {
     let __start0 = __1.0.clone();
     let __end0 = __1.2.clone();
@@ -3256,7 +3244,7 @@ fn __action44<
     __0: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
     __1: (usize, (String, usize), usize),
     __2: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
-) -> Inventory
+) -> Vec<(String, usize)>
 {
     let __start0 = __1.0.clone();
     let __end0 = __1.2.clone();
@@ -3280,7 +3268,7 @@ fn __action45<
     input: &'input str,
     __0: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
     __1: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
-) -> Inventory
+) -> Vec<(String, usize)>
 {
     let __start0 = __0.2.clone();
     let __end0 = __1.0.clone();
@@ -3307,7 +3295,7 @@ fn __action46<
     __1: (usize, ::std::vec::Vec<(String, usize)>, usize),
     __2: (usize, (String, usize), usize),
     __3: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
-) -> Inventory
+) -> Vec<(String, usize)>
 {
     let __start0 = __2.0.clone();
     let __end0 = __2.2.clone();
@@ -3333,7 +3321,7 @@ fn __action47<
     __0: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
     __1: (usize, ::std::vec::Vec<(String, usize)>, usize),
     __2: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
-) -> Inventory
+) -> Vec<(String, usize)>
 {
     let __start0 = __1.2.clone();
     let __end0 = __2.0.clone();
@@ -3359,9 +3347,9 @@ fn __action48<
     input: &'input str,
     __0: (usize, String, usize),
     __1: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
-    __2: (usize, Inventory, usize),
+    __2: (usize, Vec<(String, usize)>, usize),
     __3: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
-    __4: (usize, Inventory, usize),
+    __4: (usize, Vec<(String, usize)>, usize),
     __5: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
     __6: (usize, usize, usize),
 ) -> ProcessBuilder
@@ -3399,7 +3387,7 @@ fn __action49<
     input: &'input str,
     __0: (usize, String, usize),
     __1: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
-    __2: (usize, Inventory, usize),
+    __2: (usize, Vec<(String, usize)>, usize),
     __3: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
     __4: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
     __5: (usize, usize, usize),
@@ -3440,7 +3428,7 @@ fn __action50<
     __0: (usize, String, usize),
     __1: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
     __2: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
-    __3: (usize, Inventory, usize),
+    __3: (usize, Vec<(String, usize)>, usize),
     __4: (usize, (::std::vec::Vec<&'input str>, &'input str), usize),
     __5: (usize, usize, usize),
 ) -> ProcessBuilder
