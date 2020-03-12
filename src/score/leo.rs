@@ -1,16 +1,11 @@
 use std::collections::HashMap;
 use std::cmp::max;
 
-use crate::ast;
-use crate::ast::{Simulation};
-use crate::solver::{Path};
-use crate::simulate::simulate;
-
-pub type Score = i32;
-
-type Weight = usize;
-
-type ScoreMap = HashMap<String, Score>;
+use crate::ast::{self, Simulation};
+use super::{
+    Score,
+    ScoreMap,
+};
 
 fn find_dependencies(simulation: &Simulation, resource_name: &String) -> Option<Vec<ast::Resource>> {
 	let mut dependencies: Vec<ast::Resource> = vec![];
@@ -55,7 +50,7 @@ fn dive_in(simulation: &Simulation, map: &mut ScoreMap, visited: &mut HashMap<St
 	1
 }
 
-fn build_score_map_leo(simulation: &Simulation, _weight_multiplier: usize) -> ScoreMap {
+pub fn build_score_map_leo(simulation: &Simulation, _weight_multiplier: usize) -> ScoreMap {
 	let mut score_map: ScoreMap = HashMap::new();
 
 	for resource_name in &simulation.optimize {
@@ -75,45 +70,4 @@ fn build_score_map_leo(simulation: &Simulation, _weight_multiplier: usize) -> Sc
 		update_score_map(&mut score_map, &resource, 1000);
 	}
 	score_map
-}
-
-fn build_score_map(simulation: &Simulation, weight_multiplier: usize, broScore: BroScore) -> ScoreMap {
-	match broScore {
-		BroScore::Leo => build_score_map_leo(simulation, weight_multiplier)
-	}
-}
-
-pub enum BroScore {
-	Leo
-}
-
-pub struct Scorer {
-	simulation: Simulation,
-	score_map: ScoreMap,
-	time_weight: f32,
-}
-
-impl Scorer {
-	pub fn new(simulation: Simulation, time_weight: f32, bro_score: BroScore) -> Self {
-		let score_map = build_score_map(&simulation, 100, bro_score);
-		Self {
-			simulation: simulation.clone(),
-			score_map,
-			time_weight: if simulation.optimize_time { time_weight } else { 0. },
-		}
-	}
-
-	// TODO: memoize
-	pub fn score(&self, path: &Path) -> Result<Score, String> {
-		let (inventory, duration) = simulate(&self.simulation, &path, false)?;
-		let stock_score =
-			inventory
-			.into_iter()
-			.fold(0, |score, (name, _)| {
-				score + *self.score_map.get(&name).unwrap_or(&0)
-			});
-		let time_score = duration as f32 * self.time_weight;
-		let score = stock_score as Score - time_score.round() as Score;
-		Ok(score)
-	}
 }
