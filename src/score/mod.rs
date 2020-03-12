@@ -5,17 +5,17 @@ use std::collections::HashMap;
 
 use crate::ast::Simulation;
 use crate::solver::{Path};
-use crate::simulate::simulate;
-use leo::build_score_map_leo;
-use hugo::build_score_map_hugo;
+use leo::{build_score_map_leo, leo_score};
+use hugo::{build_score_map_hugo, hugo_score};
 
 pub type Score = i32;
 pub type Weight = usize;
 pub type ScoreMap = HashMap<String, Score>;
 
+#[derive(Clone, Copy)] // Remove 'Copy' if you change the enum
 pub enum BroScore {
 	Leo,
-    Hugo
+    Hugo,
 }
 
 fn build_score_map(simulation: &Simulation, weight_multiplier: usize, broScore: BroScore) -> ScoreMap {
@@ -29,6 +29,7 @@ pub struct Scorer {
 	simulation: Simulation,
 	score_map: ScoreMap,
 	time_weight: f32,
+    bro_score: BroScore,
 }
 
 impl Scorer {
@@ -38,20 +39,15 @@ impl Scorer {
 			simulation: simulation.clone(),
 			score_map,
 			time_weight: if simulation.optimize_time { time_weight } else { 0. },
+            bro_score,
 		}
 	}
 
 	// TODO: memoize
 	pub fn score(&self, path: &Path) -> Result<Score, String> {
-		let (inventory, duration) = simulate(&self.simulation, &path, false)?;
-		let stock_score =
-			inventory
-			.into_iter()
-			.fold(0, |score, (name, _)| {
-				score + *self.score_map.get(&name).unwrap_or(&0)
-			});
-		let time_score = duration as f32 * self.time_weight;
-		let score = stock_score as Score - time_score.round() as Score;
-		Ok(score)
+        match self.bro_score {
+            BroScore::Leo => leo_score(&self.simulation, &self.score_map, self.time_weight, path),
+            BroScore::Hugo => hugo_score(),
+        }
 	}
 }
