@@ -1,14 +1,15 @@
-pub mod parser;
 pub mod ast;
-pub mod inventory;
-pub mod genetic;
-pub mod solver;
 pub mod check;
+pub mod dna;
+pub mod genetic;
 pub mod genetic_config_parser;
 pub mod genetic_plot;
-pub mod utils;
+pub mod inventory;
+pub mod parser;
 pub mod score;
 pub mod simulate;
+pub mod solver;
+pub mod utils;
 
 #[cfg(test)]
 mod check_tests;
@@ -17,4 +18,5 @@ mod check_tests;
 mod solver_test;
 
 #[cfg(test)]
-#[macro_use] extern crate maplit;
+#[macro_use]
+extern crate maplit;
