@@ -107,18 +107,22 @@ impl GeneticSolver {
 		unimplemented!()
 	}
 
+	// Should only return possible steps
 	fn build_step_choices(
 		&self,
 		available_steps: Vec<&Step>,
 		dnas: &Vec<DNA>,
 		index: usize,
 	) -> Vec<Step> {
-		unimplemented!()
+		dnas.iter().fold(vec![], |acc, current| {
+			let steps = current.pick_steps(index, &available_steps);
+			[&acc[..], &steps[..]].concat()
+		})
 	}
 
 	fn select_step(&self, available_steps: Vec<&Step>, dnas: &Vec<DNA>, index: usize) -> Step {
 		let choices = self.build_step_choices(available_steps, dnas, index);
-		unimplemented!()
+		pick_random(choices)
 	}
 
 	fn reproduce(&self, parents: Vec<(Score, Path)>) -> Result<Vec<Path>, String> {
@@ -130,7 +134,10 @@ impl GeneticSolver {
 			let mut path: Path = vec![];
 			for i in 0..self.max_depth {
 				available_steps_i = self.get_available_steps(inventory);
-				let available_steps: Vec<&Step> = available_steps_i.iter().map(|(name, _)| name).collect();
+				if available_steps_i.is_empty() {
+					return Ok(paths);
+				}
+				let available_steps: Vec<&Step> = available_steps_i.keys().collect();
 				let step = self.select_step(available_steps, &dnas, i);
 				inventory = available_steps_i
 					.get(&step)
@@ -143,19 +150,18 @@ impl GeneticSolver {
 	}
 
 	fn get_available_steps(&self, inventory: &Inventory) -> HashMap<Step, Inventory> {
-		// self
-		// 	.simulation
-		// 	.processes
-		// 	.clone()
-		// 	.into_iter()
-		// 	.map(|(name, process)| {
-		// 		manage_resources(inventory.clone(), &process).map(|inventory| (name, inventory))
-		// 	})
-		// 	.filter(|x| x.is_ok())
-		// 	.map(|x| x.unwrap_or(("shouldn't be here".to_string(), HashMap::new())))
-		// 	.map(|(name, inv)| (name.clone(), inv))
-		// 	.collect()
-		unimplemented!()
+		self
+			.simulation
+			.processes
+			.clone()
+			.into_iter()
+			.map(|(name, process)| {
+				manage_resources(inventory.clone(), &process).map(|inventory| (name, inventory))
+			})
+			.filter(|x| x.is_ok())
+			.map(|x| x.unwrap_or(("shouldn't be here".to_string(), HashMap::new())))
+			.map(|(name, inv)| (name.clone(), inv))
+			.collect()
 	}
 
 	fn generate_one(&self, len: usize, base_inventory: &Inventory) -> Path {
@@ -166,10 +172,10 @@ impl GeneticSolver {
 			if available_steps.is_empty() {
 				return production;
 			}
-			let keys: Vec<&Step> = available_steps.iter().map(|(name, _)| name).collect();
+			let keys: Vec<&Step> = available_steps.keys().collect();
 			let step_name = pick_random(keys);
-			simulation_inventory = available_steps.get(&step_name).unwrap().clone(); //TODO: protect
-			production.push(step_name);
+			simulation_inventory = available_steps.get(step_name).unwrap().clone(); //TODO: protect
+			production.push(step_name.clone());
 		}
 		production
 	}
@@ -198,7 +204,7 @@ impl GeneticSolver {
 	}
 }
 
-fn pick_random<T: Clone>(vec: Vec<&T>) -> T {
+fn pick_random<T: Clone>(vec: Vec<T>) -> T {
 	let mut rng = rand::thread_rng();
 	let i = rng.gen_range(0, vec.len());
 	return vec[i].clone();
