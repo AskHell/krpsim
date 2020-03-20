@@ -70,7 +70,6 @@ pub fn solve<'a>(simulation: Simulation, config: Config) -> Result<Production, S
 
 impl GeneticSolver {
 	// TODO: parents_percentage in config
-	// TODO: broScore dyn
 	pub fn new(config: Config, simulation: Simulation) -> Self {
 		let parents_percentage = 10;
 		let parents_size = if config.generation_size / parents_percentage > 1 {

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::score::Score;
 use crate::solver::{Path, Step};
 
@@ -14,7 +16,30 @@ fn is_in_vec<T: PartialEq>(value: &T, vec: &Vec<&T>) -> bool {
     .fold(false, |acc, curr| acc || curr == value)
 }
 
+fn build_favorite_steps(path: &Path) -> Vec<Step> {
+  let map = path.iter().fold(HashMap::new(), |mut acc, current_step| {
+    let count = acc.get(&current_step).unwrap_or(&0);
+    acc.insert(current_step, *count + 1);
+    acc
+  });
+  let mut step_counts: Vec<(&Step, usize)> = map.into_iter().collect();
+  step_counts.sort_by(|(_, count_a), (_, count_b)| count_a.cmp(count_b));
+  step_counts
+    .into_iter()
+    .map(|(value, _)| value.clone())
+    .collect()
+}
+
 impl DNA {
+  pub fn new(path: Path, score: Score, len: usize) -> Self {
+    let favorite_steps = build_favorite_steps(&path);
+    let probability = score as f32 / len as f32;
+    Self {
+      path,
+      favorite_steps,
+      probability,
+    }
+  }
   // available_steps cannot be empty
   pub fn pick_steps(&self, index: usize, available_steps: &Vec<&Step>) -> Vec<Step> {
     let step = self.pick_step(index, available_steps);
@@ -38,8 +63,8 @@ impl DNA {
 
   // TODO: optimize, maybe with sorted available_steps ?
   fn best_available_step(&self, available_steps: &Vec<&Step>) -> Step {
-    for step in self.favorite_steps {
-      if is_in_vec(&step, available_steps) {
+    for step in self.favorite_steps.iter() {
+      if is_in_vec(step, available_steps) {
         return step.clone();
       }
     }
@@ -49,5 +74,9 @@ impl DNA {
 }
 
 pub fn build_dnas(parents: Vec<(Score, Path)>) -> Vec<DNA> {
-  unimplemented!()
+  let len = parents.len();
+  parents
+    .into_iter()
+    .map(|(score, path)| DNA::new(path, score, len))
+    .collect()
 }
